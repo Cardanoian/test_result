@@ -1,13 +1,14 @@
 import { GPTResponse, GPTRequestBody, EvaluationItem } from '../types';
+const { VITE_OPENAI_API_KEY } = import.meta.env;
 
 export const CallGpt = async (
 	subject: string,
 	item: EvaluationItem
 ): Promise<string> => {
-	const apiKey = import.meta.env.OPENAI_API_KEY;
+	const apiKey = VITE_OPENAI_API_KEY;
 
 	if (!apiKey) {
-		throw new Error('OpenAI API key is not defined in environment variables');
+		throw new Error('OpenAI API key is not configured');
 	}
 
 	const prompt = `
@@ -76,7 +77,7 @@ export const CallGpt = async (
 `;
 
 	const requestBody: GPTRequestBody = {
-		model: 'gpt-4o-mini',
+		model: 'gpt-4',
 		messages: [
 			{
 				role: 'system',
@@ -107,8 +108,7 @@ export const CallGpt = async (
 		}
 
 		const responseData: GPTResponse = await response.json();
-		const result: string = responseData.choices[0].message.content.trim();
-		return result;
+		return responseData.choices[0].message.content.trim();
 	} catch (error) {
 		console.error('Error calling GPT API:', error);
 		throw error;

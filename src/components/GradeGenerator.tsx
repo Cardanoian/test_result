@@ -47,10 +47,9 @@ const GradeGenerator: React.FC = () => {
 				const item = evaluations[i];
 				const result = await CallGpt(subject, item);
 				updatedEvaluations[i] = { ...item, result };
-				setEvaluations(updatedEvaluations);
 				setProgress(Math.round(((i + 1) / totalItems) * 100));
+				setEvaluations([...updatedEvaluations]); // 각 결과마다 UI 업데이트
 			}
-
 			generateExcelFile(subject, workbook, updatedEvaluations);
 		} catch (error) {
 			console.error('평가 생성 중 오류 발생:', error);
