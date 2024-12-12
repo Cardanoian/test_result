@@ -1,0 +1,164 @@
+* {
+	font-family: 'Jua', sans-serif;
+}
+
+.container {
+	min-height: 100vh;
+	background-color: #f5f7e9;
+}
+
+.wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	max-width: 90rem;
+	margin: 0 auto;
+	padding: 1.5rem;
+}
+
+.title {
+	font-size: 1.875rem;
+	line-height: 2.25rem;
+	font-family: 'Jua', sans-serif;
+	font-weight: normal;
+	color: #581c87;
+	margin-bottom: 2rem;
+}
+
+.inputContainer {
+	width: 100%;
+	display: flex;
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+	flex-wrap: wrap;
+}
+
+.inputGroup {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.label {
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+	color: #581c87;
+	white-space: nowrap;
+}
+
+.fileInput {
+	padding: 0.5rem;
+	border: 1px solid #e5e7eb;
+	border-radius: 0.375rem;
+	background-color: white;
+}
+
+.button {
+	padding: 0.5rem 1.5rem;
+	background-color: #581c87;
+	color: white;
+	border-radius: 0.375rem;
+	transition-property: background-color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	white-space: nowrap;
+}
+
+.button:disabled {
+	background-color: #9ca3af;
+	cursor: not-allowed;
+}
+
+.button:hover:not(:disabled) {
+	background-color: #6b21a8;
+}
+
+.dataSection {
+	width: 100%;
+	margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+	color: #581c87;
+	margin-bottom: 1rem;
+}
+
+.dataList {
+	overflow-x: auto;
+	padding: 0.5rem;
+}
+
+.subject {
+	font-size: 1.125rem;
+	font-weight: 600;
+	margin-bottom: 1rem;
+	color: #581c87;
+	padding: 0 0.5rem;
+}
+
+.evaluationTable {
+	width: 100%;
+	min-width: 1000px;
+	border-collapse: collapse;
+	margin-top: 1rem;
+}
+
+.evaluationTable th,
+.evaluationTable td {
+	padding: 0.75rem 1rem;
+	border: 1px solid #e5e7eb;
+	text-align: left;
+}
+
+.evaluationTable th {
+	background-color: #f3f4f6;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.evaluationTable td {
+	min-width: 120px;
+	max-width: 300px;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.evaluationTable tr:nth-child(even) {
+	background-color: #f9fafb;
+}
+
+.footer {
+	text-align: center;
+	font-size: 1.2rem;
+	line-height: 1.5rem;
+	color: #581c87;
+	margin-top: 1rem;
+}
+
+/* 컬럼 너비 조정 */
+.evaluationTable th:nth-child(1), /* 번호 */
+.evaluationTable td:nth-child(1) {
+	width: 80px;
+	min-width: 80px;
+}
+
+.evaluationTable th:nth-child(2), /* 영역 */
+.evaluationTable td:nth-child(2) {
+	width: 120px;
+	min-width: 120px;
+}
+
+.evaluationTable th:nth-child(5), /* 단계 */
+.evaluationTable td:nth-child(5) {
+	width: 80px;
+	min-width: 80px;
+}
+
+.evaluationTable th:nth-child(6), /* 평가결과 */
+.evaluationTable td:nth-child(6) {
+	width: 300px;
+	min-width: 300px;
+}
