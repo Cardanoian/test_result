@@ -1,6 +1,8 @@
 # 학기말 성적 생성기 사용 방법
 
-<img src="" width=800 height=600>
+<p align="center">
+  <img src="./image.png", width=800, height=600>
+</p>
 
 1. 앱의 과목 란에 생성할 과목의 이름을 적는다. (ex - 국어, 수학)
 2. 나이스에 접속한다.
