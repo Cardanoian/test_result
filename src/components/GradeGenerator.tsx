@@ -20,7 +20,6 @@ const GradeGenerator: React.FC = () => {
 		if (file) {
 			try {
 				const [data, wb] = await readExcelFile(file);
-				setSubject(data.subject);
 				setEvaluations(data.evaluations);
 				setWorkbook(wb);
 			} catch (error) {
@@ -34,7 +33,7 @@ const GradeGenerator: React.FC = () => {
 		e.preventDefault();
 
 		if (!subject || evaluations.length === 0 || !workbook) {
-			alert('엑셀 파일을 먼저 업로드해주세요.');
+			alert('과목명과 엑셀 파일을 모두 입력해주세요.');
 			return;
 		}
 
@@ -48,16 +47,24 @@ const GradeGenerator: React.FC = () => {
 				const result = await CallGpt(subject, item);
 				updatedEvaluations[i] = { ...item, result };
 				setProgress(Math.round(((i + 1) / totalItems) * 100));
-				setEvaluations([...updatedEvaluations]); // 각 결과마다 UI 업데이트
+				setEvaluations([...updatedEvaluations]);
 			}
+
 			generateExcelFile(subject, workbook, updatedEvaluations);
 		} catch (error) {
 			console.error('평가 생성 중 오류 발생:', error);
-			alert('평가 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+			alert('평가 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
 		} finally {
 			setIsLoading(false);
 			setProgress(0);
 		}
+	};
+
+	const openUserGuide = () => {
+		window.open(
+			'https://raw.githubusercontent.com/Cardanoian/test_result/refs/heads/main/README.md',
+			'_blank'
+		);
 	};
 
 	return (
@@ -66,6 +73,18 @@ const GradeGenerator: React.FC = () => {
 				<h1 className={styles.title}>학기말 성적 생성기</h1>
 
 				<div className={styles.inputContainer}>
+					<div className={styles.inputGroup}>
+						<span className={styles.label}>과목</span>
+						<input
+							type='text'
+							value={subject}
+							onChange={(e) => setSubject(e.target.value.trim())}
+							className={styles.subjectInput}
+							placeholder='과목명 입력'
+							disabled={isLoading}
+						/>
+					</div>
+
 					<div className={styles.inputGroup}>
 						<span className={styles.label}>엑셀 파일</span>
 						<input
@@ -84,6 +103,14 @@ const GradeGenerator: React.FC = () => {
 					>
 						{isLoading ? `처리 중... ${progress}%` : '생성하기'}
 					</button>
+
+					<button
+						onClick={openUserGuide}
+						className={styles.guideButton}
+						disabled={isLoading}
+					>
+						사용방법
+					</button>
 				</div>
 
 				{evaluations.length > 0 && (
@@ -91,7 +118,6 @@ const GradeGenerator: React.FC = () => {
 						<h2 className={styles.sectionTitle}>업로드된 데이터</h2>
 						<Card className='p-4 bg-white mb-4'>
 							<div className={styles.dataList}>
-								<p className={styles.subject}>과목: {subject}</p>
 								<table className={styles.evaluationTable}>
 									<thead>
 										<tr>

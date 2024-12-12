@@ -1,50 +1,13 @@
-# React + TypeScript + Vite
+# 학기말 성적 생성기 사용 방법
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<img src="" width=800 height=600>
 
-Currently, two official plugins are available:
+1. 앱의 과목 란에 생성할 과목의 이름을 적는다. (ex - 국어, 수학)
+2. 나이스에 접속한다.
+3. 성적 - 학생평가 - 교과평가 메뉴로 들어간다.
+4. 교과별 평가 탭을 누르고 들어가서 과목을 선택하고 조회한다.
+5. 파일로 받기를 누르고 엑셀 파일 형식을 선택한다.
+6. 다운받은 엑셀 파일을 업로드하고, 10분 정도 걸릴 수 있으니 커피 한 잔 마시고 온다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+- 서버에는 학생의 이름이나 번호 등 개인정보가 올라가지 않습니다.
+- 엑셀 파일은 고치지 말고 그대로 업로드 해주세요.(직접 고치시면 작동하지 않을 수 있습니다.)
