@@ -4,7 +4,7 @@ export const CallGpt = async (
 	subject: string,
 	item: EvaluationItem
 ): Promise<string> => {
-	const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+	const apiKey = import.meta.env.OPENAI_API_KEY;
 
 	if (!apiKey) {
 		throw new Error('OpenAI API key is not defined in environment variables');
