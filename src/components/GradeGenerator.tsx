@@ -62,7 +62,7 @@ const GradeGenerator: React.FC = () => {
 
   const openUserGuide = () => {
     window.open(
-      "https://github.com/Cardanoian/test_result/blob/487972899d009b719ff6c1f22862c45a1c7a71e6/README.pdf",
+      "https://raw.githubusercontent.com/Cardanoian/test_result/refs/heads/main/README.jpeg",
       "_blank"
     );
   };
