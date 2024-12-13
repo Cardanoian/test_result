@@ -83,7 +83,7 @@ export const readExcelFile = (
               ]?.v?.toString() || "",
           };
           lastNum = item.number;
-          lastArea = item.standard;
+          lastArea = item.area;
           evaluations.push(item);
           currentRow++;
         }
