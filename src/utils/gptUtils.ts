@@ -1,17 +1,17 @@
-import { GPTResponse, GPTRequestBody, EvaluationItem } from '../types';
+import { GPTResponse, GPTRequestBody, EvaluationItem } from "../types";
 const { VITE_OPENAI_API_KEY } = import.meta.env;
 
 export const CallGpt = async (
-	subject: string,
-	item: EvaluationItem
+  subject: string,
+  item: EvaluationItem
 ): Promise<string> => {
-	const apiKey = VITE_OPENAI_API_KEY;
+  const apiKey = VITE_OPENAI_API_KEY;
 
-	if (!apiKey) {
-		throw new Error('OpenAI API key is not configured');
-	}
+  if (!apiKey) {
+    throw new Error("OpenAI API key is not configured");
+  }
 
-	const prompt = `
+  const prompt = `
 [역할]
 교과 담당 교사로서 학교생활기록부 세부능력 및 특기사항 작성자
 
@@ -21,29 +21,29 @@ export const CallGpt = async (
 
 [형식 요구사항]
 1. 문장 구조
-   - 한 문장으로 작성
-   - 필수 종결어미: '-임', '-함'
-   - 금지 종결어미: '-다', '-하다', '-학생임'
-   - 부정적 표현 사용 금지
+  - 한 문장으로 작성
+  - 필수 종결어미: '-임', '-함'
+  - 금지 종결어미: '-다', '-하다', '-학생임'
+  - 부정적 표현 사용 금지
 
 2. 내용 구성
-   A. 필수 포함 요소
-      - 성취기준과 관련 능력
-      - 평가요소 관련 수행 내용
-      - 단계(A,B,C)에 따른 성취 수준
-   
-   B. 서술 방식
-      - 객관적 사실 중심
-      - 긍정적 표현
-      - 구체적 능력 명시
-			- 단계와 수준을 직접적으로 언급하는 것은 금지
+  A. 필수 포함 요소
+  - 성취기준과 관련 능력
+  - 평가요소 관련 수행 내용
+  - 단계(A,B,C)에 따른 성취 수준
+  
+  B. 서술 방식
+  - 객관적 사실 중심
+  - 긍정적 표현
+  - 구체적 능력 명시
+  - 단계와 수준을 직접적으로 언급하는 것은 금지
 
 3. 입력 정보 활용
-   - 과목: 교과 특성 반영
-   - 영역: 해당 단원/영역의 핵심 개념
-   - 성취기준: 습득해야 할 능력
-   - 평가요소: 평가 문항의 핵심 내용
-   - 단계: 성취 수준(A,B,C)
+  - 과목: 교과 특성 반영
+  - 영역: 해당 단원/영역의 핵심 개념
+  - 성취기준: 습득해야 할 능력
+  - 평가요소: 평가 문항의 핵심 내용
+  - 단계: 성취 수준(A,B,C)
 
 [출력 형식]
 성취기준과 평가요소를 연계하여 서술하되,
@@ -76,41 +76,41 @@ export const CallGpt = async (
 단계: ${item.level}
 `;
 
-	const requestBody: GPTRequestBody = {
-		model: 'gpt-4',
-		messages: [
-			{
-				role: 'system',
-				content:
-					'You are a helpful assistant that writes concise and precise academic evaluations. Please respond in Korean.',
-			},
-			{
-				role: 'user',
-				content: prompt,
-			},
-		],
-		temperature: 0.7,
-		max_tokens: 200,
-	};
+  const requestBody: GPTRequestBody = {
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a helpful assistant that writes concise and precise academic evaluations. Please respond in Korean.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 200,
+  };
 
-	try {
-		const response = await fetch('https://api.openai.com/v1/chat/completions', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${apiKey}`,
-			},
-			body: JSON.stringify(requestBody),
-		});
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
 
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-		const responseData: GPTResponse = await response.json();
-		return responseData.choices[0].message.content.trim();
-	} catch (error) {
-		console.error('Error calling GPT API:', error);
-		throw error;
-	}
+    const responseData: GPTResponse = await response.json();
+    return responseData.choices[0].message.content.trim();
+  } catch (error) {
+    console.error("Error calling GPT API:", error);
+    throw error;
+  }
 };
