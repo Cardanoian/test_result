@@ -8,11 +8,23 @@
 2. 성적 - 학생평가 - 교과평가 메뉴로 들어간다.
 3. 교과별 평가 탭을 누르고 들어가서 과목을 선택하고 조회한다.
 
+---
+
+<br/>
+<br/>
+<br/>
+
 <p align="center">
   <img src="https://github.com/Cardanoian/test_result/blob/6cab983596e6cd3cea54c8b60b5b9804ecf2c3bb/2.png">
 </p>
 
 4. 저장(💾) 버튼을을 누르고 XLS data 파일 형식을 선택한다.
+
+---
+
+<br/>
+<br/>
+<br/>
 
 <p align="center">
   <img src="https://github.com/Cardanoian/test_result/blob/9f68f49cdb81fd57a126d05ebc29b9e9e9e5d243/3.png">
