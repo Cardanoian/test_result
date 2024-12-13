@@ -23,7 +23,7 @@ export const readExcelFile = (
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const evaluations: EvaluationItem[] = [];
-        let currentRow: number = 1;
+        let currentRow = 1;
         let lastNum: string = "1";
         let lastArea: string = "";
 
@@ -84,6 +84,7 @@ export const readExcelFile = (
           };
           lastNum = item.number;
           lastArea = item.area;
+
           evaluations.push(item);
           currentRow++;
         }
@@ -113,20 +114,69 @@ export const generateExcelFile = (
   evaluations: EvaluationItem[]
 ): void => {
   const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
+  const originalSheet = workbook.Sheets[sheetName];
 
-  // 결과를 시트에 쓰기
-  evaluations.forEach((item, index) => {
-    const cellAddress = XLSX.utils.encode_cell({ r: index + 1, c: 6 }); // G열 (결과)
+  // 새로운 워크북과 시트 생성
+  const newWorkbook = XLSX.utils.book_new();
+  const newSheet: XLSX.WorkSheet = {};
 
-    if (!sheet[cellAddress]) {
-      sheet[cellAddress] = { t: "s", v: "" };
+  // 헤더 복사 (1행의 컬럼명만)
+  const columns = ["A", "B", "C", "D", "E", "F", "G"]; // 실제 사용할 열들
+  columns.forEach((col) => {
+    const cellAddress = `${col}1`;
+    if (originalSheet[cellAddress]) {
+      newSheet[cellAddress] = { ...originalSheet[cellAddress] };
     }
-    sheet[cellAddress].v = item.result;
   });
 
+  // 데이터 쓰기 (2행부터)
+  evaluations.forEach((item, index) => {
+    const row = index + 2; // 2행부터 시작
+
+    // 각 열에 데이터 쓰기
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 0 })] = {
+      t: "s",
+      v: item.number,
+    };
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 2 })] = {
+      t: "s",
+      v: item.area,
+    };
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 3 })] = {
+      t: "s",
+      v: item.standard,
+    };
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 4 })] = {
+      t: "s",
+      v: item.element,
+    };
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 5 })] = {
+      t: "s",
+      v: item.level,
+    };
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 6 })] = {
+      t: "s",
+      v: item.result,
+    };
+  });
+
+  // 범위 설정
+  const range = {
+    s: { c: 0, r: 0 },
+    e: { c: 6, r: evaluations.length },
+  };
+  newSheet["!ref"] = XLSX.utils.encode_range(range);
+
+  // 열 너비 설정 (원본에서 복사)
+  if (originalSheet["!cols"]) {
+    newSheet["!cols"] = originalSheet["!cols"];
+  }
+
+  // 새 시트를 워크북에 추가
+  XLSX.utils.book_append_sheet(newWorkbook, newSheet, sheetName);
+
   // 파일 다운로드
-  const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
+  const wbout = XLSX.write(newWorkbook, { bookType: "xlsx", type: "binary" });
 
   function s2ab(s: string) {
     const buf = new ArrayBuffer(s.length);

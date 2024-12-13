@@ -89,7 +89,7 @@ export const CallGpt = async (
         content: prompt,
       },
     ],
-    temperature: 0.7,
+    temperature: 1,
     max_tokens: 200,
   };
 
