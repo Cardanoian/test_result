@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Card from './Card';
+import { Trash2 } from 'lucide-react';
 import { CallGpt } from '../utils/gptUtils';
 import { readExcelFile, generateExcelFile } from '../utils/excelUtils';
 import { EvaluationItem } from '../types';
@@ -13,6 +14,7 @@ const GradeGenerator: React.FC = () => {
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 직접 입력용 상태
   const [inputNumber, setInputNumber] = useState('');
@@ -52,6 +54,21 @@ const GradeGenerator: React.FC = () => {
   // 행 삭제 핸들러
   const handleDeleteEvaluation = (index: number) => {
     setEvaluations(evaluations.filter((_, i) => i !== index));
+  };
+
+  // 초기화 핸들러
+  const handleReset = () => {
+    setSubject('');
+    setEvaluations([]);
+    setWorkbook(null);
+    setInputNumber('');
+    setInputArea('');
+    setInputStandard('');
+    setInputElement('');
+    setInputLevel('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleFileUpload = async (
@@ -134,6 +151,7 @@ const GradeGenerator: React.FC = () => {
               onChange={handleFileUpload}
               className={styles.fileInput}
               disabled={isLoading}
+              ref={fileInputRef}
             />
           </div>
 
@@ -146,8 +164,21 @@ const GradeGenerator: React.FC = () => {
           </button>
 
           <button
+            onClick={handleReset}
+            className={`${styles.button} ${styles.resetButton}`}
+            style={{
+              marginLeft: 8,
+              minWidth: 80,
+            }}
+            disabled={isLoading}
+            type='button'
+          >
+            초기화
+          </button>
+
+          <button
             onClick={openUserGuide}
-            className={styles.guideButton}
+            className={`${styles.guideButton} ${styles.button}`}
             disabled={isLoading}
           >
             사용방법
@@ -155,15 +186,8 @@ const GradeGenerator: React.FC = () => {
         </div>
 
         {/* 직접 입력 폼 */}
-        <div
-          className={styles.inputContainer}
-          style={{
-            marginTop: '16px',
-            background: '#f9f9f9',
-            padding: '12px',
-            borderRadius: '8px',
-          }}
-        >
+        <div className={styles.inputContainer}>
+          <div className={styles.label}>데이터 개별 추가</div>
           <div
             style={{
               display: 'flex',
@@ -179,6 +203,7 @@ const GradeGenerator: React.FC = () => {
               placeholder='번호'
               className={styles.subjectInput}
               disabled={isLoading}
+              style={{ width: 60 }}
             />
             <input
               type='text'
@@ -187,6 +212,7 @@ const GradeGenerator: React.FC = () => {
               placeholder='영역'
               className={styles.subjectInput}
               disabled={isLoading}
+              style={{ width: 80 }}
             />
             <input
               type='text'
@@ -195,6 +221,7 @@ const GradeGenerator: React.FC = () => {
               placeholder='성취기준'
               className={styles.subjectInput}
               disabled={isLoading}
+              style={{ width: 250 }}
             />
             <input
               type='text'
@@ -203,6 +230,7 @@ const GradeGenerator: React.FC = () => {
               placeholder='평가요소'
               className={styles.subjectInput}
               disabled={isLoading}
+              style={{ width: 250 }}
             />
             <input
               type='text'
@@ -211,6 +239,7 @@ const GradeGenerator: React.FC = () => {
               placeholder='단계'
               className={styles.subjectInput}
               disabled={isLoading}
+              style={{ width: 80 }}
             />
             <button
               onClick={handleAddEvaluation}
@@ -232,25 +261,19 @@ const GradeGenerator: React.FC = () => {
                 <table className={styles.evaluationTable}>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: 'center', width: 40 }}>삭제</th>
-                      <th style={{ textAlign: 'center', width: 50 }}>번호</th>
-                      <th style={{ textAlign: 'center', width: 70 }}>영역</th>
-                      <th style={{ textAlign: 'center', width: 220 }}>
-                        성취기준
-                      </th>
-                      <th style={{ textAlign: 'center', width: 220 }}>
-                        평가요소
-                      </th>
-                      <th style={{ textAlign: 'center', width: 60 }}>단계</th>
-                      <th style={{ textAlign: 'center', width: 220 }}>
-                        평가결과
-                      </th>
+                      <th style={{ textAlign: 'center' }}></th>
+                      <th style={{ textAlign: 'center' }}>번호</th>
+                      <th style={{ textAlign: 'center' }}>영역</th>
+                      <th style={{ textAlign: 'center' }}>성취기준</th>
+                      <th style={{ textAlign: 'center' }}>평가요소</th>
+                      <th style={{ textAlign: 'center' }}>단계</th>
+                      <th style={{ textAlign: 'center' }}>평가결과</th>
                     </tr>
                   </thead>
                   <tbody>
                     {evaluations.map((item, index) => (
                       <tr key={index}>
-                        <td style={{ textAlign: 'center', width: 40 }}>
+                        <td style={{ textAlign: 'center' }}>
                           <button
                             className={styles.button}
                             style={{
@@ -259,31 +282,22 @@ const GradeGenerator: React.FC = () => {
                               background: '#e74c3c',
                               color: '#fff',
                               fontSize: 'small',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                             }}
                             onClick={() => handleDeleteEvaluation(index)}
                             type='button'
                           >
-                            삭제
+                            <Trash2 size={20} />
                           </button>
                         </td>
-                        <td style={{ textAlign: 'center', width: 50 }}>
-                          {item.number}
-                        </td>
-                        <td style={{ textAlign: 'center', width: 70 }}>
-                          {item.area}
-                        </td>
-                        <td style={{ textAlign: 'center', width: 220 }}>
-                          {item.standard}
-                        </td>
-                        <td style={{ textAlign: 'center', width: 220 }}>
-                          {item.element}
-                        </td>
-                        <td style={{ textAlign: 'center', width: 60 }}>
-                          {item.level}
-                        </td>
-                        <td style={{ textAlign: 'center', width: 220 }}>
-                          {item.result}
-                        </td>
+                        <td style={{ textAlign: 'center' }}>{item.number}</td>
+                        <td style={{ textAlign: 'center' }}>{item.area}</td>
+                        <td style={{ textAlign: 'center' }}>{item.standard}</td>
+                        <td style={{ textAlign: 'center' }}>{item.element}</td>
+                        <td style={{ textAlign: 'center' }}>{item.level}</td>
+                        <td style={{ textAlign: 'center' }}>{item.result}</td>
                       </tr>
                     ))}
                   </tbody>
