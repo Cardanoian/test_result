@@ -2,6 +2,10 @@
   font-family: 'Jua', sans-serif;
 }
 
+body {
+  overflow: hidden;
+}
+
 .container {
   height: 100vh;
   min-height: 100vh;
