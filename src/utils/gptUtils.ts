@@ -1,14 +1,15 @@
-import { GPTResponse, GPTRequestBody, EvaluationItem } from "../types";
+import { GPTResponse, GPTRequestBody, EvaluationItem } from '../types';
 const { VITE_OPENAI_API_KEY } = import.meta.env;
 
 export const CallGpt = async (
   subject: string,
   item: EvaluationItem
 ): Promise<string> => {
+  console.log(VITE_OPENAI_API_KEY);
   const apiKey = VITE_OPENAI_API_KEY;
 
   if (!apiKey) {
-    throw new Error("OpenAI API key is not configured");
+    throw new Error('OpenAI API key is not configured');
   }
 
   const prompt = `
@@ -77,15 +78,15 @@ export const CallGpt = async (
 `;
 
   const requestBody: GPTRequestBody = {
-    model: "gpt-4.1-mini",
+    model: 'gpt-4.1-mini',
     messages: [
       {
-        role: "system",
+        role: 'system',
         content:
-          "You are a helpful assistant that writes concise and precise academic evaluations. Please respond in Korean.",
+          'You are a helpful assistant that writes concise and precise academic evaluations. Please respond in Korean.',
       },
       {
-        role: "user",
+        role: 'user',
         content: prompt,
       },
     ],
@@ -94,10 +95,10 @@ export const CallGpt = async (
   };
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(requestBody),
@@ -110,7 +111,7 @@ export const CallGpt = async (
     const responseData: GPTResponse = await response.json();
     return responseData.choices[0].message.content.trim();
   } catch (error) {
-    console.error("Error calling GPT API:", error);
+    console.error('Error calling GPT API:', error);
     throw error;
   }
 };
