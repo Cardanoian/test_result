@@ -5,7 +5,6 @@ export const CallGpt = async (
   subject: string,
   item: EvaluationItem
 ): Promise<string> => {
-  console.log(VITE_OPENAI_API_KEY);
   const apiKey = VITE_OPENAI_API_KEY;
 
   if (!apiKey) {
@@ -48,7 +47,7 @@ export const CallGpt = async (
 
 [출력 형식]
 성취기준과 평가요소를 연계하여 서술하되,
-1. 명사형 종결어미('-함', '-임') 사용
+1. 명사형 종결어미('-함.', '-임.') 사용
 2. 평가 내용 + 수행 능력/태도의 구조
 3. 부정적 표현 대신 발전적 표현 사용
 
@@ -66,7 +65,7 @@ export const CallGpt = async (
 예시 구조 분석:
 "각 대륙에 있는 다양한 나라를 살펴보고 그 나라의 영토 크기와 범위를 파악해 각 나라의 특징을 이해함."
 ↓
-[평가 내용: 각 대륙의 나라 탐구] + [수행 능력: 영토 크기와 범위 파악] + [결과: 특징 이해] + [종결어미: -함]
+[평가 내용: 각 대륙의 나라 탐구] + [수행 능력: 영토 크기와 범위 파악] + [결과: 특징 이해] + [종결어미: -함.]
 
 [입력할 평가 정보]
 아래에 제시하는 과목, 영역, 성취기준, 평가요소, 단계를 바탕으로 위 형식에 맞는 평가 결과를 작성해주세요:
@@ -109,7 +108,11 @@ export const CallGpt = async (
     }
 
     const responseData: GPTResponse = await response.json();
-    return responseData.choices[0].message.content.trim();
+    let result = responseData.choices[0].message.content.trim();
+    if (!result.endsWith('.')) {
+      result += '.';
+    }
+    return result;
   } catch (error) {
     console.error('Error calling GPT API:', error);
     throw error;
