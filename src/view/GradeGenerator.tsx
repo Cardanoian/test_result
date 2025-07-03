@@ -243,17 +243,23 @@ const GradeGenerator: React.FC = () => {
               <CardTitle>성적 데이터</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className='rounded-md border overflow-auto'>
-                <Table>
+              <div className='rounded-md border'>
+                <Table className='w-full table-fixed'>
                   <TableHeader>
                     <TableRow>
                       <TableHead className='w-12 text-center'>삭제</TableHead>
-                      <TableHead className='w-16 text-center'>번호</TableHead>
+                      <TableHead className='w-12 text-center'>번호</TableHead>
                       <TableHead className='w-24 text-center'>영역</TableHead>
-                      <TableHead className='text-center'>성취기준</TableHead>
-                      <TableHead className='text-center'>평가요소</TableHead>
-                      <TableHead className='w-16 text-center'>단계</TableHead>
-                      <TableHead className='text-center'>평가결과</TableHead>
+                      <TableHead className='w-[15%] text-center'>
+                        성취기준
+                      </TableHead>
+                      <TableHead className='w-[15%] text-center'>
+                        평가요소
+                      </TableHead>
+                      <TableHead className='w-12 text-center'>단계</TableHead>
+                      <TableHead className='w-auto text-center'>
+                        평가결과
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -275,16 +281,16 @@ const GradeGenerator: React.FC = () => {
                         <TableCell className='text-center'>
                           {item.area}
                         </TableCell>
-                        <TableCell className='text-center'>
+                        <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
                           {item.standard}
                         </TableCell>
-                        <TableCell className='text-center'>
+                        <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
                           {item.element}
                         </TableCell>
                         <TableCell className='text-center'>
                           {item.level}
                         </TableCell>
-                        <TableCell className='text-center'>
+                        <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
                           {item.result}
                         </TableCell>
                       </TableRow>
