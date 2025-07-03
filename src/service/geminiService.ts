@@ -97,7 +97,7 @@ export const callGeminiApi = async (
         thinkingConfig: {
           thinkingBudget: 0, // Disables thinking
         },
-        temperature: 0.7,
+        temperature: 1,
       },
     });
 
