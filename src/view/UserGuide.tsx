@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/view/ui/card';
+import { Button } from '@/view/ui/button';
 import { X } from 'lucide-react';
 
 interface UserGuideProps {

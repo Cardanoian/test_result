@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/view/ui/card';
+import { Button } from '@/view/ui/button';
+import { Input } from '@/view/ui/input';
+import { Progress } from '@/view/ui/progress';
 import {
   Table,
   TableBody,
@@ -10,138 +10,40 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/view/ui/table';
 import { Trash2, Upload, RotateCcw, HelpCircle, Sparkles } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle';
-import { CallGpt } from '../utils/gptUtils';
-import { readExcelFile, generateExcelFile } from '../utils/excelUtils';
-import { EvaluationItem } from '../types';
-import * as XLSX from 'xlsx';
-import UserGuide from './UserGuide';
+import { ThemeToggle } from '@/view/ThemeToggle';
+import UserGuide from '@/view/UserGuide';
+import { useGradeGeneratorViewModel } from '@/viewmodel/useGradeGeneratorViewModel';
+import { EvaluationItem } from '@/model';
 
 const GradeGenerator: React.FC = () => {
-  const [subject, setSubject] = useState<string>('');
-  const [evaluations, setEvaluations] = useState<EvaluationItem[]>([]);
-  const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
-  const [fileName, setFileName] = useState<string>('');
-  const [isUserGuideOpen, setIsUserGuideOpen] = useState<boolean>(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // 직접 입력용 상태
-  const [inputNumber, setInputNumber] = useState('');
-  const [inputArea, setInputArea] = useState('');
-  const [inputStandard, setInputStandard] = useState('');
-  const [inputElement, setInputElement] = useState('');
-  const [inputLevel, setInputLevel] = useState('');
-
-  // 직접 입력 추가 핸들러
-  const handleAddEvaluation = () => {
-    if (
-      !inputNumber ||
-      !inputArea ||
-      !inputStandard ||
-      !inputElement ||
-      !inputLevel
-    ) {
-      alert('모든 항목을 입력해주세요.');
-      return;
-    }
-    const newItem: EvaluationItem = {
-      number: inputNumber,
-      area: inputArea,
-      standard: inputStandard,
-      element: inputElement,
-      level: inputLevel,
-      result: '', // 직접 입력 시 result는 비워둠
-    };
-    setEvaluations([...evaluations, newItem]);
-    setInputNumber('');
-    setInputArea('');
-    setInputStandard('');
-    setInputElement('');
-    setInputLevel('');
-  };
-
-  // 행 삭제 핸들러
-  const handleDeleteEvaluation = (index: number) => {
-    setEvaluations(evaluations.filter((_, i) => i !== index));
-  };
-
-  // 초기화 핸들러
-  const handleReset = () => {
-    setSubject('');
-    setEvaluations([]);
-    setWorkbook(null);
-    setInputNumber('');
-    setInputArea('');
-    setInputStandard('');
-    setInputElement('');
-    setInputLevel('');
-    setFileName('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      try {
-        const [data, wb] = await readExcelFile(file, setSubject);
-        setEvaluations(data.evaluations);
-        setWorkbook(wb);
-      } catch (error) {
-        console.error('엑셀 파일 처리 중 오류 발생:', error);
-        alert('파일 처리 중 오류가 발생했습니다.');
-        setFileName('');
-      }
-    } else {
-      setFileName('');
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!subject || evaluations.length === 0 || !workbook) {
-      alert('과목명과 엑셀 파일을 모두 입력해주세요.');
-      return;
-    }
-
-    setIsLoading(true);
-    const updatedEvaluations = [...evaluations];
-    const totalItems = evaluations.length;
-
-    try {
-      for (let i = 0; i < evaluations.length; i++) {
-        const item = evaluations[i];
-        const result = await CallGpt(subject, item);
-        updatedEvaluations[i] = { ...item, result };
-        setProgress(Math.round(((i + 1) / totalItems) * 100));
-        setEvaluations([...updatedEvaluations]);
-      }
-
-      generateExcelFile(subject, workbook, updatedEvaluations);
-    } catch (error) {
-      console.error('평가 생성 중 오류 발생:', error);
-      alert('평가 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    } finally {
-      setIsLoading(false);
-      setProgress(0);
-    }
-  };
-
-  // const openUserGuide = () => {
-  // window.open(
-  //   'https://raw.githubusercontent.com/Cardanoian/test_result/refs/heads/main/README.jpeg',
-  //   '_blank'
-  // );
-  // };
+  const {
+    subject,
+    setSubject,
+    evaluations,
+    isLoading,
+    progress,
+    fileName,
+    isUserGuideOpen,
+    setIsUserGuideOpen,
+    fileInputRef,
+    inputNumber,
+    setInputNumber,
+    inputArea,
+    setInputArea,
+    inputStandard,
+    setInputStandard,
+    inputElement,
+    setInputElement,
+    inputLevel,
+    setInputLevel,
+    handleAddEvaluation,
+    handleDeleteEvaluation,
+    handleReset,
+    handleFileUpload,
+    handleSubmit,
+  } = useGradeGeneratorViewModel();
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4'>
@@ -174,7 +76,9 @@ const GradeGenerator: React.FC = () => {
                 <Input
                   type='text'
                   value={subject}
-                  onChange={(e) => setSubject(e.target.value.trim())}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setSubject(e.target.value)
+                  }
                   placeholder='과목명을 입력하세요'
                   disabled={isLoading}
                 />
@@ -198,7 +102,9 @@ const GradeGenerator: React.FC = () => {
                   <Input
                     type='file'
                     accept='.xlsx, .xls'
-                    onChange={handleFileUpload}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleFileUpload(e)
+                    }
                     disabled={isLoading}
                     ref={fileInputRef}
                     className='hidden'
@@ -209,7 +115,9 @@ const GradeGenerator: React.FC = () => {
 
             <div className='flex flex-wrap gap-3'>
               <Button
-                onClick={handleSubmit}
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                  handleSubmit(e)
+                }
                 disabled={!subject || evaluations.length === 0 || isLoading}
                 className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
               >
@@ -262,7 +170,9 @@ const GradeGenerator: React.FC = () => {
                 <Input
                   type='text'
                   value={inputNumber}
-                  onChange={(e) => setInputNumber(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setInputNumber(e.target.value)
+                  }
                   placeholder='번호'
                   disabled={isLoading}
                 />
@@ -272,7 +182,9 @@ const GradeGenerator: React.FC = () => {
                 <Input
                   type='text'
                   value={inputArea}
-                  onChange={(e) => setInputArea(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setInputArea(e.target.value)
+                  }
                   placeholder='영역'
                   disabled={isLoading}
                 />
@@ -282,7 +194,9 @@ const GradeGenerator: React.FC = () => {
                 <Input
                   type='text'
                   value={inputStandard}
-                  onChange={(e) => setInputStandard(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setInputStandard(e.target.value)
+                  }
                   placeholder='성취기준'
                   disabled={isLoading}
                 />
@@ -292,7 +206,9 @@ const GradeGenerator: React.FC = () => {
                 <Input
                   type='text'
                   value={inputElement}
-                  onChange={(e) => setInputElement(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setInputElement(e.target.value)
+                  }
                   placeholder='평가요소'
                   disabled={isLoading}
                 />
@@ -302,7 +218,9 @@ const GradeGenerator: React.FC = () => {
                 <Input
                   type='text'
                   value={inputLevel}
-                  onChange={(e) => setInputLevel(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setInputLevel(e.target.value)
+                  }
                   placeholder='단계'
                   disabled={isLoading}
                 />
@@ -339,7 +257,7 @@ const GradeGenerator: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {evaluations.map((item, index) => (
+                    {evaluations.map((item: EvaluationItem, index: number) => (
                       <TableRow key={index}>
                         <TableCell className='text-center'>
                           <Button

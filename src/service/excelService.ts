@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { ExcelData, EvaluationItem } from '../types';
+import { ExcelData, EvaluationItem } from '../model';
 
 export const readExcelFile = (
   file: File,
