@@ -4,7 +4,7 @@ import { ExcelData, EvaluationItem } from '../model';
 export const readExcelFile = (
   file: File,
   setSubject: React.Dispatch<React.SetStateAction<string>>
-): Promise<[ExcelData, XLSX.WorkBook]> => {
+): Promise<ExcelData> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -95,12 +95,9 @@ export const readExcelFile = (
           currentRow++;
         }
 
-        resolve([
-          {
-            evaluations,
-          },
-          workbook,
-        ]);
+        resolve({
+          evaluations,
+        });
       } catch (error) {
         reject(error);
       }
@@ -116,24 +113,34 @@ export const readExcelFile = (
 
 export const generateExcelFile = (
   subject: string,
-  workbook: XLSX.WorkBook,
   evaluations: EvaluationItem[]
 ): void => {
-  const sheetName = workbook.SheetNames[0];
-  const originalSheet = workbook.Sheets[sheetName];
-
   // 새로운 워크북과 시트 생성
   const newWorkbook = XLSX.utils.book_new();
   const newSheet: XLSX.WorkSheet = {};
+  const sheetName = `${subject}생성결과`;
 
-  // 헤더 복사 (1행의 컬럼명만)
-  const columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G']; // 실제 사용할 열들
-  columns.forEach((col) => {
-    const cellAddress = `${col}1`;
-    if (originalSheet[cellAddress]) {
-      newSheet[cellAddress] = { ...originalSheet[cellAddress] };
-    }
-  });
+  newSheet['A1'] = { t: 's', v: '번호' };
+  newSheet['B1'] = {
+    t: 's',
+    v: '영역',
+  };
+  newSheet['C1'] = { t: 's', v: '성취기준' };
+  newSheet['D1'] = { t: 's', v: '평가요소' };
+  newSheet['E1'] = { t: 's', v: '단계' };
+  newSheet['F1'] = { t: 's', v: '생성결과' };
+
+  // 번호, 영역, 성취기준, 평가요소, 단계, 생성결과
+  const cols = [
+    { wch: 10 },
+    { wch: 20 },
+    { wch: 40 },
+    { wch: 40 },
+    { wch: 10 },
+    { wch: 50 },
+  ];
+  cols.push({ wch: 80 }); // 생성결과
+  newSheet['!cols'] = cols;
 
   // 데이터 쓰기 (2행부터)
   evaluations.forEach((item, index) => {
@@ -172,11 +179,6 @@ export const generateExcelFile = (
     e: { c: 6, r: evaluations.length },
   };
   newSheet['!ref'] = XLSX.utils.encode_range(range);
-
-  // 열 너비 설정 (원본에서 복사)
-  if (originalSheet['!cols']) {
-    newSheet['!cols'] = originalSheet['!cols'];
-  }
 
   // 새 시트를 워크북에 추가
   XLSX.utils.book_append_sheet(newWorkbook, newSheet, sheetName);

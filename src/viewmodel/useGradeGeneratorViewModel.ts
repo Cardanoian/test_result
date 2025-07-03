@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import * as XLSX from 'xlsx';
 import { EvaluationItem } from '../model';
 import { generateExcelFile, readExcelFile } from '../service/excelService';
 import { callGeminiApi } from '../service/geminiService';
@@ -7,7 +6,6 @@ import { callGeminiApi } from '../service/geminiService';
 export const useGradeGeneratorViewModel = () => {
   const [subject, setSubject] = useState<string>('');
   const [evaluations, setEvaluations] = useState<EvaluationItem[]>([]);
-  const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [fileName, setFileName] = useState<string>('');
@@ -20,6 +18,9 @@ export const useGradeGeneratorViewModel = () => {
   const [inputStandard, setInputStandard] = useState('');
   const [inputElement, setInputElement] = useState('');
   const [inputLevel, setInputLevel] = useState('');
+  const [promptLength, setPromptLength] = useState<'짧게' | '보통' | '길게'>(
+    '보통'
+  );
 
   const handleAddEvaluation = () => {
     if (
@@ -55,7 +56,6 @@ export const useGradeGeneratorViewModel = () => {
   const handleReset = () => {
     setSubject('');
     setEvaluations([]);
-    setWorkbook(null);
     setInputNumber('');
     setInputArea('');
     setInputStandard('');
@@ -74,9 +74,8 @@ export const useGradeGeneratorViewModel = () => {
     if (file) {
       setFileName(file.name);
       try {
-        const [data, wb] = await readExcelFile(file, setSubject);
+        const data = await readExcelFile(file, setSubject);
         setEvaluations(data.evaluations);
-        setWorkbook(wb);
       } catch (error) {
         console.error('엑셀 파일 처리 중 오류 발생:', error);
         alert('파일 처리 중 오류가 발생했습니다.');
@@ -90,7 +89,7 @@ export const useGradeGeneratorViewModel = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!subject || evaluations.length === 0 || !workbook) {
+    if (!subject || evaluations.length === 0) {
       alert('과목명과 엑셀 파일을 모두 입력해주세요.');
       return;
     }
@@ -99,16 +98,23 @@ export const useGradeGeneratorViewModel = () => {
     const updatedEvaluations = [...evaluations];
     const totalItems = evaluations.length;
 
+    const lengthInstruction =
+      promptLength === '짧게'
+        ? '간결하게 30자 이내로 작성합니다.'
+        : promptLength === '길게'
+        ? '상세하게 150자 이상, 200자 이내로 작성합니다.'
+        : '보통 길이(50자~100자 정도)로 작성합니다.';
+
     try {
       for (let i = 0; i < evaluations.length; i++) {
         const item = evaluations[i];
-        const result = await callGeminiApi(subject, item);
+        const result = await callGeminiApi(subject, item, lengthInstruction);
         updatedEvaluations[i] = { ...item, result };
         setProgress(Math.round(((i + 1) / totalItems) * 100));
         setEvaluations([...updatedEvaluations]);
       }
 
-      generateExcelFile(subject, workbook, updatedEvaluations);
+      generateExcelFile(subject, updatedEvaluations);
     } catch (error) {
       console.error('평가 생성 중 오류 발생:', error);
       alert('평가 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
@@ -143,5 +149,7 @@ export const useGradeGeneratorViewModel = () => {
     handleReset,
     handleFileUpload,
     handleSubmit,
+    promptLength,
+    setPromptLength,
   };
 };

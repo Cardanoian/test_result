@@ -11,6 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/view/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/view/ui/select';
 import { Trash2, Upload, RotateCcw, HelpCircle, Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/view/ThemeToggle';
 import UserGuide from '@/view/UserGuide';
@@ -43,6 +50,8 @@ const GradeGenerator: React.FC = () => {
     handleReset,
     handleFileUpload,
     handleSubmit,
+    promptLength,
+    setPromptLength,
   } = useGradeGeneratorViewModel();
 
   return (
@@ -66,7 +75,7 @@ const GradeGenerator: React.FC = () => {
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
               <Upload className='h-5 w-5' />
-              기본 설정
+              성적 자료 입력
             </CardTitle>
           </CardHeader>
           <CardContent className='space-y-4'>
@@ -113,37 +122,59 @@ const GradeGenerator: React.FC = () => {
               </div>
             </div>
 
-            <div className='flex flex-wrap gap-3'>
-              <Button
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                  handleSubmit(e)
-                }
-                disabled={!subject || evaluations.length === 0 || isLoading}
-                className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-              >
-                {isLoading ? <></> : <Sparkles />}
-                {isLoading ? `처리 중... ${progress}%` : '생성하기'}
-              </Button>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='flex flex-wrap gap-3'>
+                <Button
+                  onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                    handleSubmit(e)
+                  }
+                  disabled={!subject || evaluations.length === 0 || isLoading}
+                  className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                >
+                  {isLoading ? <></> : <Sparkles />}
+                  {isLoading ? `처리 중... ${progress}%` : '생성하기'}
+                </Button>
 
-              <Button
-                onClick={handleReset}
-                variant='outline'
-                disabled={isLoading}
-                className='gap-2'
-              >
-                <RotateCcw className='h-4 w-4' />
-                초기화
-              </Button>
+                <Button
+                  onClick={handleReset}
+                  variant='outline'
+                  disabled={isLoading}
+                  className='gap-2'
+                >
+                  <RotateCcw className='h-4 w-4' />
+                  초기화
+                </Button>
 
-              <Button
-                onClick={() => setIsUserGuideOpen(true)}
-                variant='outline'
-                disabled={isLoading}
-                className='gap-2'
-              >
-                <HelpCircle className='h-4 w-4' />
-                사용방법
-              </Button>
+                <Button
+                  onClick={() => setIsUserGuideOpen(true)}
+                  variant='outline'
+                  disabled={isLoading}
+                  className='gap-2'
+                >
+                  <HelpCircle className='h-4 w-4' />
+                  사용방법
+                </Button>
+              </div>
+
+              <div className='space-y-2 flex flex-wrap gap-3 items-center'>
+                <label className='text-sm font-medium'>생성 길이</label>
+                <Select
+                  value={promptLength}
+                  onValueChange={(value: '짧게' | '보통' | '길게') =>
+                    setPromptLength(value)
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className='w-[120px]'>
+                    <SelectValue placeholder='길이 선택' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='짧게'>짧게</SelectItem>
+                    <SelectItem value='보통'>보통</SelectItem>
+                    <SelectItem value='길게'>길게</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {isLoading && (

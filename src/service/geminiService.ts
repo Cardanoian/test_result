@@ -11,7 +11,8 @@ const ai = new GoogleGenAI({ apiKey: VITE_GOOGLE_API_KEY });
 
 export const callGeminiApi = async (
   subject: string,
-  item: EvaluationItem
+  item: EvaluationItem,
+  lengthInstruction: string
 ): Promise<string> => {
   const model = 'gemini-2.5-flash';
 
@@ -20,7 +21,7 @@ export const callGeminiApi = async (
 당신은 학생들의 성장과 발전을 돕는 데 헌신하는, 20년 경력의 노련하고 통찰력 있는 대한민국 고등학교 교과 담당 교사입니다. 당신의 목표는 학교생활기록부의 '세부능력 및 특기사항'란에 각 학생의 학업적 성취와 잠재력을 객관적 사실에 기반하여, 가장 긍정적이고 인상적으로 기록하는 것입니다.
 
 [작성 목표]
-주어진 학생 평가 정보를 바탕으로, 학생의 핵심 역량과 성장 과정을 보여주는 한 문장의 '세부능력 및 특기사항'을 작성합니다.
+주어진 학생 평가 정보를 바탕으로, 학생의 핵심 역량과 성장 과정을 보여주는 한 문장의 '세부능력 및 특기사항'을 작성합니다. ${lengthInstruction}
 
 [작성 3원칙]
 1.  **객관성**: 학생의 수행 과정과 성취 수준을 구체적인 사실에 기반하여 서술합니다.
