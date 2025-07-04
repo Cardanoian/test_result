@@ -11,13 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/view/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/view/ui/select';
+import { Slider } from '@/view/ui/slider';
+import { Switch } from '@/view/ui/switch';
+import { Label } from '@/view/ui/label';
 import { Trash2, Upload, RotateCcw, HelpCircle, Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/view/ThemeToggle';
 import UserGuide from '@/view/UserGuide';
@@ -52,6 +48,8 @@ const GradeGenerator: React.FC = () => {
     handleSubmit,
     promptLength,
     setPromptLength,
+    isRandomLength,
+    setIsRandomLength,
   } = useGradeGeneratorViewModel();
 
   return (
@@ -158,22 +156,35 @@ const GradeGenerator: React.FC = () => {
 
               <div className='space-y-2 flex flex-wrap gap-3 items-center'>
                 <label className='text-sm font-medium'>생성 길이</label>
-                <Select
-                  value={promptLength}
-                  onValueChange={(value: '짧게' | '보통' | '길게') =>
-                    setPromptLength(value)
-                  }
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className='w-[120px]'>
-                    <SelectValue placeholder='길이 선택' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='짧게'>짧게</SelectItem>
-                    <SelectItem value='보통'>보통</SelectItem>
-                    <SelectItem value='길게'>길게</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className='flex items-center gap-4 w-auto'>
+                  <div className='flex items-center gap-4 w-[200px]'>
+                    <Slider
+                      value={[promptLength]}
+                      onValueChange={(value) => setPromptLength(value[0])}
+                      min={1}
+                      max={3}
+                      step={1}
+                      disabled={isLoading || isRandomLength}
+                      className='w-full'
+                    />
+                    <span className='text-sm font-medium w-12 text-center'>
+                      {promptLength === 1
+                        ? '짧게'
+                        : promptLength === 2
+                        ? '보통'
+                        : '길게'}
+                    </span>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <Switch
+                      id='random-length'
+                      checked={isRandomLength}
+                      onCheckedChange={setIsRandomLength}
+                      disabled={isLoading}
+                    />
+                    <Label htmlFor='random-length'>무작위</Label>
+                  </div>
+                </div>
               </div>
             </div>
 

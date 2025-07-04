@@ -18,9 +18,8 @@ export const useGradeGeneratorViewModel = () => {
   const [inputStandard, setInputStandard] = useState('');
   const [inputElement, setInputElement] = useState('');
   const [inputLevel, setInputLevel] = useState('');
-  const [promptLength, setPromptLength] = useState<'짧게' | '보통' | '길게'>(
-    '보통'
-  );
+  const [promptLength, setPromptLength] = useState<number>(2);
+  const [isRandomLength, setIsRandomLength] = useState<boolean>(false);
 
   const handleAddEvaluation = () => {
     if (
@@ -62,6 +61,8 @@ export const useGradeGeneratorViewModel = () => {
     setInputElement('');
     setInputLevel('');
     setFileName('');
+    setIsRandomLength(false);
+    setPromptLength(2);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -98,12 +99,13 @@ export const useGradeGeneratorViewModel = () => {
     const updatedEvaluations = [...evaluations];
     const totalItems = evaluations.length;
 
-    const lengthInstruction =
-      promptLength === '짧게'
-        ? '간결하게 30자 이내로 작성합니다.'
-        : promptLength === '길게'
-        ? '상세하게 150자 이상, 200자 이내로 작성합니다.'
-        : '보통 길이(50자~100자 정도)로 작성합니다.';
+    const lengthInstruction = isRandomLength
+      ? '20자에서 100자 길이로 작성합니다.'
+      : promptLength === 1
+      ? '간결하게 30자 이내로 작성합니다.'
+      : promptLength === 3
+      ? '상세하게 150자 이상, 200자 이내로 작성합니다.'
+      : '50자 이상 100자 이내의 보통 길이로 작성합니다.';
 
     try {
       for (let i = 0; i < evaluations.length; i++) {
@@ -151,5 +153,7 @@ export const useGradeGeneratorViewModel = () => {
     handleSubmit,
     promptLength,
     setPromptLength,
+    isRandomLength,
+    setIsRandomLength,
   };
 };
