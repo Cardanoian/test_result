@@ -128,16 +128,48 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
                     <ul className='list-disc list-inside space-y-1 text-sm text-muted-foreground ml-6'>
                       <li>
                         나이스에 접속하여{' '}
-                        <strong>[성적] - [학생평가] - [교과평가]</strong> 메뉴로
-                        이동합니다.
+                        <strong className='text-red-600 dark:text-red-400'>
+                          [성적]
+                        </strong>{' '}
+                        -{' '}
+                        <strong className='text-red-600 dark:text-red-400'>
+                          [학생평가]
+                        </strong>{' '}
+                        -{' '}
+                        <strong className='text-red-600 dark:text-red-400'>
+                          [교과평가]
+                        </strong>{' '}
+                        메뉴로 이동합니다.
                       </li>
+                      <img
+                        src='/1.png'
+                        alt='NEIS 스크린샷 1'
+                        className='rounded-md border shadow-sm w-full'
+                      />
+                      <br />
                       <li>
-                        '교과별 평가' 탭에서 과목을 선택하고 조회한 후, 저장(💾)
-                        아이콘을 클릭하여 <strong>'XLS data'</strong> 형식으로
-                        저장합니다.
+                        '교과별 평가' 탭에서 과목을 선택하고 조회한 후,{' '}
+                        <strong className='text-red-600 dark:text-red-400'>
+                          출력
+                        </strong>
+                        버튼을 누르고{' '}
+                        <strong className='text-red-600 dark:text-red-400'>
+                          저장(💾)
+                        </strong>{' '}
+                        아이콘을 클릭하여{' '}
+                        <strong className='text-red-600 dark:text-red-400'>
+                          'XLS data'
+                        </strong>{' '}
+                        형식으로 저장합니다.
                       </li>
+                      <img
+                        src='/2.png'
+                        alt='NEIS 스크린샷 2'
+                        className='rounded-md border shadow-sm w-full'
+                      />
                     </ul>
                   </div>
+                  <br />
                   <div>
                     <h4 className='font-medium mb-2 flex items-center gap-2'>
                       <Upload className='h-4 w-4' />
@@ -145,8 +177,10 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
                     </h4>
                     <ul className='list-disc list-inside space-y-1 text-sm text-muted-foreground ml-6'>
                       <li>
-                        <strong>"파일 선택"</strong> 버튼(업로드 아이콘)을
-                        클릭합니다.
+                        <strong className='text-red-600 dark:text-red-400'>
+                          "파일 선택"
+                        </strong>{' '}
+                        버튼(업로드 아이콘)을 클릭합니다.
                       </li>
                       <li>작성한 엑셀 파일(.xlsx 또는 .xls)을 선택합니다.</li>
                       <li>
@@ -219,8 +253,11 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
                 </h3>
                 <ul className='list-disc list-inside space-y-1 text-sm text-muted-foreground ml-6'>
                   <li>
-                    학생 데이터가 입력되면 <strong>"생성하기"</strong> 버튼(별
-                    아이콘)이 활성화됩니다.
+                    학생 데이터가 입력되면{' '}
+                    <strong className='text-red-600 dark:text-red-400'>
+                      "생성하기"
+                    </strong>{' '}
+                    버튼(별 아이콘)이 활성화됩니다.
                   </li>
                   <li>버튼을 클릭하여 AI 생성을 시작합니다.</li>
                 </ul>
@@ -239,8 +276,11 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
                 <h3 className='font-semibold mb-2'>✅ 결과 확인</h3>
                 <ul className='list-disc list-inside space-y-1 text-sm text-muted-foreground ml-6'>
                   <li>
-                    생성이 완료되면 각 학생의 <strong>"평가결과"</strong> 열에
-                    AI가 생성한 내용이 표시됩니다.
+                    생성이 완료되면 각 학생의{' '}
+                    <strong className='text-red-600 dark:text-red-400'>
+                      "평가결과"
+                    </strong>{' '}
+                    열에 AI가 생성한 내용이 표시됩니다.
                   </li>
                 </ul>
               </div>
@@ -312,7 +352,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
                   <span className='text-red-500 font-bold'>🔒</span>
                   <div>
                     <strong>개인정보 보호:</strong> 학생의 개인정보(이름 등)는
-                    서버에 전송되지 않으며, 입력하지 않는 것을 권장합니다.
+                    서버에 전송되지 않지만, 입력하지 않는 것을 권장합니다.
                   </div>
                 </li>
                 <li className='flex items-start gap-2'>
