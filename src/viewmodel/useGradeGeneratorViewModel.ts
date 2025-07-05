@@ -2,6 +2,8 @@ import { useState, useRef } from 'react';
 import { EvaluationItem } from '../model';
 import { generateExcelFile, readExcelFile } from '../service/excelService';
 import { callGeminiApi } from '../service/geminiService';
+import { logAppUsage } from '@/service/supabaseService';
+import getPrompt from '@/service/promptService';
 
 export const useGradeGeneratorViewModel = () => {
   const [subject, setSubject] = useState<string>('');
@@ -110,12 +112,13 @@ export const useGradeGeneratorViewModel = () => {
     try {
       for (let i = 0; i < evaluations.length; i++) {
         const item = evaluations[i];
-        const result = await callGeminiApi(subject, item, lengthInstruction);
+        const prompt = getPrompt(subject, item, lengthInstruction);
+        const result = await callGeminiApi(prompt);
         updatedEvaluations[i] = { ...item, result };
         setProgress(Math.round(((i + 1) / totalItems) * 100));
         setEvaluations([...updatedEvaluations]);
+        await logAppUsage(prompt, result);
       }
-
       generateExcelFile(subject, updatedEvaluations);
     } catch (error) {
       console.error('평가 생성 중 오류 발생:', error);
