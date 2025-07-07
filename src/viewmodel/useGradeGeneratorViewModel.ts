@@ -23,6 +23,23 @@ export const useGradeGeneratorViewModel = () => {
   const [promptLength, setPromptLength] = useState<number>(2);
   const [isRandomLength, setIsRandomLength] = useState<boolean>(false);
 
+  const handleEvaluationChange = (
+    index: number,
+    field: keyof EvaluationItem,
+    value: string
+  ) => {
+    const updatedEvaluations = evaluations.map((item, i) => {
+      if (i === index) {
+        return {
+          ...item,
+          [field]: field === 'level' ? value.toUpperCase() : value,
+        };
+      }
+      return item;
+    });
+    setEvaluations(updatedEvaluations);
+  };
+
   const handleAddEvaluation = () => {
     if (
       !inputNumber ||
@@ -73,6 +90,7 @@ export const useGradeGeneratorViewModel = () => {
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
+    // handleReset();
     const file = event.target.files?.[0];
     if (file) {
       setFileName(file.name);
@@ -93,8 +111,38 @@ export const useGradeGeneratorViewModel = () => {
     e.preventDefault();
 
     if (!subject || evaluations.length === 0) {
-      alert('과목명과 엑셀 파일을 모두 입력해주세요.');
+      alert('과목명과 학생 데이터가 모두 입력되었는지 확인해주세요.');
       return;
+    }
+
+    // Validation check
+    for (let i = 0; i < evaluations.length; i++) {
+      const item = evaluations[i];
+      const fieldsToCheck: (keyof EvaluationItem)[] = [
+        'number',
+        'area',
+        'standard',
+        'element',
+        'level',
+      ];
+      for (const field of fieldsToCheck) {
+        if (String(item[field]).trim() === '') {
+          const fieldNameMap: Record<keyof EvaluationItem, string> = {
+            number: '번호',
+            area: '영역',
+            standard: '성취기준',
+            element: '평가요소',
+            level: '단계',
+            result: '평가결과',
+          };
+          alert(
+            `${item.number || i + 1}번 학생의 '${
+              fieldNameMap[field]
+            }' 영역에 빈 자료가 있습니다.`
+          );
+          return; // Stop submission
+        }
+      }
     }
 
     setIsLoading(true);
@@ -115,9 +163,9 @@ export const useGradeGeneratorViewModel = () => {
         const prompt = getPrompt(subject, item, lengthInstruction);
         const result = await callGeminiApi(prompt);
         updatedEvaluations[i] = { ...item, result };
-        setProgress(Math.round(((i + 1) / totalItems) * 100));
         setEvaluations([...updatedEvaluations]);
         await logAppUsage(prompt, result);
+        setProgress(Math.round(((i + 1) / totalItems) * 100));
       }
       generateExcelFile(subject, updatedEvaluations);
     } catch (error) {
@@ -158,5 +206,6 @@ export const useGradeGeneratorViewModel = () => {
     setPromptLength,
     isRandomLength,
     setIsRandomLength,
+    handleEvaluationChange,
   };
 };

@@ -14,7 +14,7 @@ export const callGeminiApi = async (contents: string): Promise<string> => {
         thinkingConfig: {
           thinkingBudget: 0,
         },
-        temperature: 1.2,
+        temperature: 2,
       },
     });
 

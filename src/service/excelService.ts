@@ -137,9 +137,8 @@ export const generateExcelFile = (
     { wch: 40 },
     { wch: 40 },
     { wch: 10 },
-    { wch: 50 },
+    { wch: 80 },
   ];
-  cols.push({ wch: 80 }); // 생성결과
   newSheet['!cols'] = cols;
 
   // 데이터 쓰기 (2행부터)
@@ -151,23 +150,23 @@ export const generateExcelFile = (
       t: 's',
       v: item.number,
     };
-    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 2 })] = {
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 1 })] = {
       t: 's',
       v: item.area,
     };
-    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 3 })] = {
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 2 })] = {
       t: 's',
       v: item.standard,
     };
-    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 4 })] = {
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 3 })] = {
       t: 's',
       v: item.element,
     };
-    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 5 })] = {
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 4 })] = {
       t: 's',
       v: item.level,
     };
-    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 6 })] = {
+    newSheet[XLSX.utils.encode_cell({ r: row - 1, c: 5 })] = {
       t: 's',
       v: item.result,
     };
@@ -176,7 +175,7 @@ export const generateExcelFile = (
   // 범위 설정
   const range = {
     s: { c: 0, r: 0 },
-    e: { c: 6, r: evaluations.length },
+    e: { c: 5, r: evaluations.length },
   };
   newSheet['!ref'] = XLSX.utils.encode_range(range);
 

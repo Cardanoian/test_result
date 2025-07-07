@@ -19,7 +19,7 @@ import { ThemeToggle } from '@/view/ThemeToggle';
 import UserGuide from '@/view/UserGuide';
 import { useGradeGeneratorViewModel } from '@/viewmodel/useGradeGeneratorViewModel';
 import { EvaluationItem } from '@/model';
-
+import { cn } from '@/lib/utils';
 const GradeGenerator: React.FC = () => {
   const {
     subject,
@@ -50,7 +50,16 @@ const GradeGenerator: React.FC = () => {
     setPromptLength,
     isRandomLength,
     setIsRandomLength,
+    handleEvaluationChange,
   } = useGradeGeneratorViewModel();
+
+  const fields: (keyof EvaluationItem)[] = [
+    'number',
+    'area',
+    'standard',
+    'element',
+    'level',
+  ];
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4'>
@@ -317,21 +326,26 @@ const GradeGenerator: React.FC = () => {
                             <Trash2 className='h-4 w-4' />
                           </Button>
                         </TableCell>
-                        <TableCell className='text-center'>
-                          {item.number}
-                        </TableCell>
-                        <TableCell className='text-center'>
-                          {item.area}
-                        </TableCell>
-                        <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
-                          {item.standard}
-                        </TableCell>
-                        <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
-                          {item.element}
-                        </TableCell>
-                        <TableCell className='text-center'>
-                          {item.level}
-                        </TableCell>
+                        {fields.map((field) => (
+                          <TableCell key={field} className='p-1'>
+                            <Input
+                              type='text'
+                              value={item[field]}
+                              onChange={(e) =>
+                                handleEvaluationChange(
+                                  index,
+                                  field,
+                                  e.target.value
+                                )
+                              }
+                              className={cn(
+                                'w-full text-center',
+                                String(item[field]).trim() === '' &&
+                                  'border-red-500'
+                              )}
+                            />
+                          </TableCell>
+                        ))}
                         <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
                           {item.result}
                         </TableCell>
