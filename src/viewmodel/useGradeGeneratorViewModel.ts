@@ -32,7 +32,8 @@ export const useGradeGeneratorViewModel = () => {
       if (i === index) {
         return {
           ...item,
-          [field]: field === 'level' ? value.toUpperCase() : value,
+          [field]:
+            field === 'level' ? value.toUpperCase().trim() : value.trim(),
         };
       }
       return item;
