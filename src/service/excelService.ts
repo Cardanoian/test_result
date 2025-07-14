@@ -1,10 +1,7 @@
 import * as XLSX from 'xlsx';
 import { ExcelData, EvaluationItem } from '../model';
 
-export const readExcelFile = (
-  file: File,
-  setSubject: React.Dispatch<React.SetStateAction<string>>
-): Promise<ExcelData> => {
+export const readExcelFile = (file: File): Promise<ExcelData> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -24,10 +21,6 @@ export const readExcelFile = (
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const evaluations: EvaluationItem[] = [];
-
-        const subject =
-          sheet[XLSX.utils.encode_cell({ r: 0, c: 0 })]?.v?.toString();
-        setSubject(() => subject);
 
         let currentRow = 1;
         let lastNum: string = '1';

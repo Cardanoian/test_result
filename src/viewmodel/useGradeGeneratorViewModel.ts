@@ -92,12 +92,14 @@ export const useGradeGeneratorViewModel = () => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     // handleReset();
+    // setSubject('');
     const file = event.target.files?.[0];
     if (file) {
       setFileName(file.name);
       try {
-        const data = await readExcelFile(file, setSubject);
+        const data = await readExcelFile(file);
         setEvaluations(data.evaluations);
+        console.log(subject, evaluations, fileName);
       } catch (error) {
         console.error('엑셀 파일 처리 중 오류 발생:', error);
         alert('파일 처리 중 오류가 발생했습니다.');
