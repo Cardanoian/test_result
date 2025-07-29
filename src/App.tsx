@@ -1,4 +1,4 @@
-import GradeGenerator from './view/GradeGenerator';
+// import GradeGenerator from './view/GradeGenerator';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 function App() {
