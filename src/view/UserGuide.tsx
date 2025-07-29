@@ -22,7 +22,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
       <Card className='w-full max-w-4xl h-[90vh] flex flex-col'>
         <CardHeader className='flex flex-row items-center justify-between z-10 border-b'>
           <CardTitle className='text-xl font-bold'>
-            학기말 성적 생성기 사용 방법
+            성적 생성기 사용 방법
           </CardTitle>
           <Button
             variant='ghost'
