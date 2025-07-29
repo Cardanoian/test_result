@@ -5,7 +5,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme='dark' storageKey='grade-generator-theme'>
       <div className='min-h-screen bg-background text-foreground transition-colors'>
-        <GradeGenerator />
+        {/* <GradeGenerator /> */}
       </div>
     </ThemeProvider>
   );
