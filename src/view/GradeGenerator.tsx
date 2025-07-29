@@ -346,8 +346,8 @@ const GradeGenerator: React.FC = () => {
 
         {/* 푸터 */}
         <div className='text-center text-muted-foreground text-sm py-8'>
-          <p>포항원동초등학교</p>
-          <p>교사 김지원 제작</p>
+          {/* <p>포항원동초등학교</p>
+          <p>교사 김지원 제작</p> */}
         </div>
       </div>
       {isUserGuideOpen && (
