@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   backend:
     build: .
@@ -20,4 +18,3 @@ services:
 networks:
   grade-network:
     name: grade-network
-    external: true

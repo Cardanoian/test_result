@@ -74,218 +74,50 @@ check_docker() {
     log_success "Docker Compose가 설치되어 있습니다."
 }
 
-# 백엔드 .env 파일 확인
-check_backend_env() {
-    log_step "백엔드 .env 파일 확인 중..."
+# 백엔드 배포 스크립트 실행
+deploy_backend() {
+    log_step "===================================================="
+    log_step "백엔드 배포 시작 (nginx + SSL + Docker)"
+    log_step "===================================================="
+    echo ""
     
-    if [ ! -f backend/.env ]; then
-        log_warning "backend/.env 파일이 없습니다."
-        if [ -f backend/.env.example ]; then
-            log_info "backend/.env.example을 복사합니다."
-            cp backend/.env.example backend/.env
-            log_error "backend/.env 파일을 생성했습니다. GOOGLE_API_KEY를 설정한 후 다시 실행해주세요."
-            exit 1
-        else
-            log_error "backend/.env.example 파일도 없습니다."
-            exit 1
-        fi
-    fi
-    
-    # GOOGLE_API_KEY 확인
-    if ! grep -q "GOOGLE_API_KEY=" backend/.env || grep -q "GOOGLE_API_KEY=$" backend/.env; then
-        log_error "backend/.env 파일에 GOOGLE_API_KEY가 설정되지 않았습니다."
+    if [ ! -f backend/back.sh ]; then
+        log_error "backend/back.sh 파일을 찾을 수 없습니다."
         exit 1
     fi
     
-    log_success "백엔드 .env 파일 확인 완료"
-}
-
-# 필요한 디렉토리 생성
-create_directories() {
-    log_step "필요한 디렉토리 생성 중..."
-    
-    mkdir -p backend/logs
-    
-    log_success "디렉토리 생성 완료"
-}
-
-# 포트 사용 중인 프로세스 확인 및 정리
-check_and_free_ports() {
-    log_step "포트 사용 확인 및 정리 중..."
-    
-    # 포트 80 확인
-    if ss -ltn | grep -q ':80 '; then
-        log_warning "포트 80이 사용 중입니다."
-        
-        # 포트 80을 사용하는 모든 Docker 컨테이너 중지
-        local containers=$(docker ps --format "{{.ID}} {{.Ports}}" | grep '0.0.0.0:80' | awk '{print $1}')
-        if [ -n "$containers" ]; then
-            log_info "포트 80을 사용하는 Docker 컨테이너를 중지합니다..."
-            echo "$containers" | xargs -r docker stop
-            echo "$containers" | xargs -r docker rm
-            log_success "포트 80 사용 컨테이너 정리 완료"
-            sleep 2
-        fi
-    fi
-    
-    # 포트 443 확인
-    if ss -ltn | grep -q ':443 '; then
-        log_warning "포트 443이 사용 중입니다."
-        
-        # 포트 443을 사용하는 모든 Docker 컨테이너 중지
-        local containers=$(docker ps --format "{{.ID}} {{.Ports}}" | grep '0.0.0.0:443' | awk '{print $1}')
-        if [ -n "$containers" ]; then
-            log_info "포트 443을 사용하는 Docker 컨테이너를 중지합니다..."
-            echo "$containers" | xargs -r docker stop
-            echo "$containers" | xargs -r docker rm
-            log_success "포트 443 사용 컨테이너 정리 완료"
-            sleep 2
-        fi
-    fi
-    
-    # 포트 3050 확인
-    if ss -ltn | grep -q ':3050 '; then
-        log_warning "포트 3050이 사용 중입니다."
-        
-        # 포트 3050을 사용하는 모든 Docker 컨테이너 중지
-        local containers=$(docker ps --format "{{.ID}} {{.Ports}}" | grep '0.0.0.0:3050' | awk '{print $1}')
-        if [ -n "$containers" ]; then
-            log_info "포트 3050을 사용하는 Docker 컨테이너를 중지합니다..."
-            echo "$containers" | xargs -r docker stop
-            echo "$containers" | xargs -r docker rm
-            log_success "포트 3050 사용 컨테이너 정리 완료"
-            sleep 2
-        fi
-    fi
-    
-    log_success "포트 정리 완료"
-}
-
-# 기존 컨테이너 중지 및 삭제
-stop_and_remove_containers() {
-    log_step "기존 컨테이너 확인 및 정리 중..."
-    
-    # 프론트엔드 컨테이너
-    if docker ps -a | grep -q "grade-frontend"; then
-        log_warning "기존 프론트엔드 컨테이너를 중지하고 삭제합니다..."
-        docker stop grade-frontend 2>/dev/null || true
-        docker rm grade-frontend 2>/dev/null || true
-        log_success "프론트엔드 컨테이너 삭제 완료"
-    fi
-    
-    # 백엔드 컨테이너
-    if docker ps -a | grep -q "grade-backend"; then
-        log_warning "기존 백엔드 컨테이너를 중지하고 삭제합니다..."
-        docker stop grade-backend 2>/dev/null || true
-        docker rm grade-backend 2>/dev/null || true
-        log_success "백엔드 컨테이너 삭제 완료"
-    fi
-    
-    # docker-compose로 실행된 컨테이너들 정리
-    if docker compose ps 2>/dev/null | grep -q "Up\|Exit"; then
-        log_warning "Docker Compose 컨테이너들을 중지합니다..."
-        docker compose down 2>/dev/null || true
-    fi
-    
+    # back.sh가 이미 모든 작업을 수행합니다:
+    # - nginx 설치 및 설정
+    # - SSL 인증서 발급
+    # - 자동 갱신 설정
+    # - 백엔드 Docker 빌드 및 시작
     cd backend
-    if docker compose ps 2>/dev/null | grep -q "Up\|Exit"; then
-        log_warning "백엔드 Docker Compose 컨테이너들을 중지합니다..."
-        docker compose down 2>/dev/null || true
-    fi
+    ./back.sh
     cd ..
     
-    log_success "기존 컨테이너 정리 완료"
+    echo ""
+    log_success "백엔드 배포 완료!"
+    echo ""
 }
 
-# Docker 이미지 삭제
-remove_images() {
-    log_step "기존 Docker 이미지 삭제 중..."
+# 프론트엔드 배포 스크립트 실행
+deploy_frontend() {
+    log_step "===================================================="
+    log_step "프론트엔드 배포 시작"
+    log_step "===================================================="
+    echo ""
     
-    # 프론트엔드 이미지
-    if docker images | grep -q "test_result-frontend\|test_result_frontend"; then
-        log_warning "프론트엔드 이미지를 삭제합니다..."
-        docker rmi -f $(docker images | grep "test_result-frontend\|test_result_frontend" | awk '{print $3}') 2>/dev/null || true
-        log_success "프론트엔드 이미지 삭제 완료"
+    if [ ! -f front.sh ]; then
+        log_error "front.sh 파일을 찾을 수 없습니다."
+        exit 1
     fi
     
-    # 백엔드 이미지
-    if docker images | grep -q "backend-backend\|backend_backend"; then
-        log_warning "백엔드 이미지를 삭제합니다..."
-        docker rmi -f $(docker images | grep "backend-backend\|backend_backend" | awk '{print $3}') 2>/dev/null || true
-        log_success "백엔드 이미지 삭제 완료"
-    fi
+    # front.sh가 모든 프론트엔드 배포 작업을 수행합니다
+    ./front.sh
     
-    log_success "Docker 이미지 삭제 완료"
-}
-
-# Docker 빌드 캐시 정리
-clean_build_cache() {
-    log_step "Docker 빌드 캐시 정리 중..."
-    
-    docker builder prune -af 2>/dev/null || true
-    
-    log_success "빌드 캐시 정리 완료"
-}
-
-# 프론트엔드 빌드 및 시작
-build_and_start_frontend() {
-    log_step "프론트엔드 빌드 및 시작 중..."
-    log_info "프론트엔드 빌드 중... (5-10분 소요 가능)"
-    
-    docker compose build --no-cache frontend
-    docker compose up -d frontend
-    
-    log_success "프론트엔드 컨테이너 시작 완료"
-}
-
-# 백엔드 빌드 및 시작
-build_and_start_backend() {
-    log_step "백엔드 빌드 및 시작 중..."
-    log_info "백엔드 빌드 중... (2-3분 소요 가능)"
-    
-    cd backend
-    docker compose build --no-cache backend
-    docker compose up -d backend
-    cd ..
-    
-    log_success "백엔드 컨테이너 시작 완료"
-}
-
-# 헬스 체크
-health_check() {
-    log_step "서비스 헬스 체크 중..."
-    
-    # 프론트엔드 헬스 체크
-    log_info "프론트엔드 서버 확인 중..."
-    for i in {1..12}; do
-        if curl -f http://localhost:80 &> /dev/null; then
-            log_success "프론트엔드 서버가 정상적으로 실행 중입니다!"
-            break
-        fi
-        
-        if [ $i -eq 12 ]; then
-            log_warning "프론트엔드 서버 헬스 체크 실패 (로그를 확인해주세요)"
-        else
-            log_info "프론트엔드 서버 시작 대기 중... ($i/12)"
-            sleep 5
-        fi
-    done
-    
-    # 백엔드 헬스 체크
-    log_info "백엔드 서버 확인 중..."
-    for i in {1..12}; do
-        if curl -f http://localhost:3050/health &> /dev/null; then
-            log_success "백엔드 서버가 정상적으로 실행 중입니다!"
-            break
-        fi
-        
-        if [ $i -eq 12 ]; then
-            log_warning "백엔드 서버 헬스 체크 실패 (로그를 확인해주세요)"
-        else
-            log_info "백엔드 서버 시작 대기 중... ($i/12)"
-            sleep 5
-        fi
-    done
+    echo ""
+    log_success "프론트엔드 배포 완료!"
+    echo ""
 }
 
 # 배포 정보 출력
@@ -293,7 +125,7 @@ print_deployment_info() {
     echo ""
     echo -e "${GREEN}╔═══════════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║                                                       ║${NC}"
-    echo -e "${GREEN}║              🎉 배포 완료! 🎉                        ║${NC}"
+    echo -e "${GREEN}║              🎉 통합 배포 완료! 🎉                   ║${NC}"
     echo -e "${GREEN}║                                                       ║${NC}"
     echo -e "${GREEN}╚═══════════════════════════════════════════════════════╝${NC}"
     echo ""
@@ -303,11 +135,18 @@ print_deployment_info() {
     echo -e "   - 로컬 프론트엔드: ${GREEN}http://localhost:80${NC}"
     echo -e "   - 로컬 백엔드: ${GREEN}http://localhost:3050${NC}"
     echo ""
+    echo -e "${BLUE}🔒 SSL 인증서:${NC}"
+    echo -e "   - 백엔드 자동 갱신: ${GREEN}활성화${NC}"
+    echo -e "   - 갱신 주기: ${GREEN}매일 2회 확인${NC}"
+    echo ""
     echo -e "${BLUE}🔧 유용한 명령어:${NC}"
     echo -e "   - 전체 로그: ${YELLOW}docker compose logs -f${NC}"
     echo -e "   - 프론트엔드 로그: ${YELLOW}docker compose logs -f frontend${NC}"
     echo -e "   - 백엔드 로그: ${YELLOW}cd backend && docker compose logs -f backend${NC}"
+    echo -e "   - nginx 로그: ${YELLOW}tail -f /var/log/nginx/backend-error.log${NC}"
     echo -e "   - 컨테이너 상태: ${YELLOW}docker ps${NC}"
+    echo -e "   - nginx 상태: ${YELLOW}systemctl status nginx${NC}"
+    echo -e "   - SSL 인증서 상태: ${YELLOW}certbot certificates${NC}"
     echo ""
     echo -e "${BLUE}🚀 부분 배포:${NC}"
     echo -e "   - 프론트엔드만: ${YELLOW}sudo ./front.sh${NC}"
@@ -327,15 +166,12 @@ main() {
     
     check_root
     check_docker
-    check_backend_env
-    create_directories
-    check_and_free_ports
-    stop_and_remove_containers
-    remove_images
-    clean_build_cache
-    build_and_start_frontend
-    build_and_start_backend
-    health_check
+    
+    # 백엔드 먼저 배포 (nginx + SSL + Docker)
+    deploy_backend
+    
+    # 프론트엔드 배포
+    deploy_frontend
     
     print_deployment_info
     

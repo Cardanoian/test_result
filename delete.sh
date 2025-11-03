@@ -56,7 +56,10 @@ confirm_deletion() {
     echo -e "  ${RED}✗${NC} 모든 Grade Generator 이미지"
     echo -e "  ${RED}✗${NC} 모든 Grade Generator 볼륨"
     echo -e "  ${RED}✗${NC} 모든 Grade Generator 네트워크"
+    echo -e "  ${RED}✗${NC} nginx 설정 파일 (백업 포함)"
     echo -e "  ${RED}✗${NC} Docker 빌드 캐시"
+    echo ""
+    echo -e "${YELLOW}주의: SSL 인증서는 삭제하지 않습니다. (필요시 수동 삭제: sudo rm -rf /etc/letsencrypt)${NC}"
     echo ""
     
     read -p "정말로 삭제하시겠습니까? (yes/no): " -r
@@ -67,12 +70,39 @@ confirm_deletion() {
     fi
 }
 
+# nginx 설정 파일 삭제
+cleanup_nginx_config() {
+    log_info "nginx 설정 파일을 삭제합니다..."
+    
+    # grade-server.gbeai.net 설정 삭제
+    if [ -f /etc/nginx/sites-enabled/grade-server.gbeai.net.conf ]; then
+        rm -f /etc/nginx/sites-enabled/grade-server.gbeai.net.conf
+        log_success "nginx sites-enabled 링크 삭제 완료"
+    fi
+    
+    if [ -f /etc/nginx/sites-available/grade-server.gbeai.net.conf ]; then
+        rm -f /etc/nginx/sites-available/grade-server.gbeai.net.conf
+        log_success "nginx sites-available 설정 삭제 완료"
+    fi
+    
+    # 백업 파일들도 삭제
+    rm -f /etc/nginx/sites-available/grade-server.gbeai.net.conf.backup.* 2>/dev/null || true
+    
+    # nginx 재시작 (설정 파일이 삭제되었으므로)
+    if systemctl is-active --quiet nginx; then
+        log_info "nginx를 재시작합니다..."
+        nginx -t 2>/dev/null && systemctl reload nginx || log_warning "nginx 설정 오류 (다른 사이트 설정 확인 필요)"
+    fi
+    
+    log_success "nginx 설정 정리 완료"
+}
+
 main() {
     print_banner
     check_root
     confirm_deletion
     
-    log_info "Docker 리소스 정리를 시작합니다..."
+    log_info "Docker 및 nginx 리소스 정리를 시작합니다..."
     echo ""
     
     # Docker Compose 스택 중지
@@ -117,11 +147,18 @@ main() {
     log_info "Docker 시스템 전체를 정리합니다 (빌드 캐시, 로그 등)..."
     docker system prune -af 2>/dev/null || true
     
+    # nginx 설정 정리
+    cleanup_nginx_config
+    
     # 프로젝트 빌드 캐시 삭제
     log_info "프로젝트 빌드 캐시를 삭제합니다..."
     rm -rf node_modules 2>/dev/null || true
     rm -rf backend/node_modules 2>/dev/null || true
     rm -rf .next 2>/dev/null || true
+    
+    # 로그 디렉토리 정리
+    log_info "백엔드 로그를 삭제합니다..."
+    rm -rf backend/logs/* 2>/dev/null || true
     
     echo ""
     echo -e "${GREEN}╔═══════════════════════════════════════════════════════╗${NC}"
@@ -135,12 +172,24 @@ main() {
     echo -e "   ${GREEN}✓${NC} 모든 이미지 삭제"
     echo -e "   ${GREEN}✓${NC} 모든 볼륨 삭제"
     echo -e "   ${GREEN}✓${NC} 모든 네트워크 삭제"
+    echo -e "   ${GREEN}✓${NC} nginx 설정 파일 삭제"
     echo -e "   ${GREEN}✓${NC} 빌드 캐시 정리"
+    echo -e "   ${GREEN}✓${NC} 로그 파일 정리"
+    echo ""
+    echo -e "${BLUE}⚠️  보존된 항목:${NC}"
+    echo -e "   ${YELLOW}•${NC} SSL 인증서 (/etc/letsencrypt/)"
+    echo -e "   ${YELLOW}•${NC} 소스 코드"
+    echo -e "   ${YELLOW}•${NC} .env 파일"
     echo ""
     echo -e "${BLUE}🚀 재배포:${NC}"
     echo -e "   - 전체 배포: ${YELLOW}sudo ./deploy.sh${NC}"
     echo -e "   - 프론트엔드만: ${YELLOW}sudo ./front.sh${NC}"
     echo -e "   - 백엔드만: ${YELLOW}cd backend && sudo ./back.sh${NC}"
+    echo ""
+    echo -e "${BLUE}🗑️  SSL 인증서도 삭제하려면:${NC}"
+    echo -e "   ${YELLOW}sudo certbot delete --cert-name grade-server.gbeai.net${NC}"
+    echo -e "   또는"
+    echo -e "   ${YELLOW}sudo rm -rf /etc/letsencrypt${NC}"
     echo ""
     
     log_success "모든 정리 작업이 완료되었습니다! 🗑️"

@@ -13,6 +13,10 @@ BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
+# 도메인 설정
+DOMAIN="grade-server.gbeai.net"
+EMAIL="gbeai@sc.gyo6.net"  # SSL 인증서용 이메일 (사용자가 수정 필요)
+
 # 로그 함수
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -54,6 +58,37 @@ check_root() {
         exit 1
     fi
     log_success "Root 권한 확인 완료"
+}
+
+# nginx 설치 확인 및 설치
+check_and_install_nginx() {
+    log_step "nginx 확인 중..."
+    
+    if ! command -v nginx &> /dev/null; then
+        log_warning "nginx가 설치되어 있지 않습니다. 설치를 시작합니다..."
+        apt-get update
+        apt-get install -y nginx
+        log_success "nginx 설치 완료"
+    else
+        log_success "nginx가 이미 설치되어 있습니다. ($(nginx -v 2>&1))"
+    fi
+    
+    # nginx 서비스 활성화
+    systemctl enable nginx
+}
+
+# certbot 설치 확인 및 설치
+check_and_install_certbot() {
+    log_step "certbot 확인 중..."
+    
+    if ! command -v certbot &> /dev/null; then
+        log_warning "certbot이 설치되어 있지 않습니다. 설치를 시작합니다..."
+        apt-get update
+        apt-get install -y certbot python3-certbot-nginx
+        log_success "certbot 설치 완료"
+    else
+        log_success "certbot이 이미 설치되어 있습니다. ($(certbot --version))"
+    fi
 }
 
 # Docker 설치 확인
@@ -104,8 +139,163 @@ create_directories() {
     log_step "필요한 디렉토리 생성 중..."
     
     mkdir -p logs
+    mkdir -p /var/www/certbot
     
     log_success "디렉토리 생성 완료"
+}
+
+# nginx 설정 파일 배포
+deploy_nginx_config() {
+    log_step "nginx 설정 파일 배포 중..."
+    
+    # nginx 설정 파일이 있는지 확인
+    if [ ! -f "nginx/${DOMAIN}.conf" ]; then
+        log_error "nginx/${DOMAIN}.conf 파일이 없습니다!"
+        exit 1
+    fi
+    
+    # 기존 설정 파일 백업
+    if [ -f "/etc/nginx/sites-available/${DOMAIN}.conf" ]; then
+        log_warning "기존 설정 파일을 백업합니다..."
+        cp "/etc/nginx/sites-available/${DOMAIN}.conf" "/etc/nginx/sites-available/${DOMAIN}.conf.backup.$(date +%Y%m%d_%H%M%S)"
+    fi
+    
+    # 새 설정 파일 복사
+    cp "nginx/${DOMAIN}.conf" "/etc/nginx/sites-available/${DOMAIN}.conf"
+    
+    # 심볼릭 링크 생성
+    if [ ! -L "/etc/nginx/sites-enabled/${DOMAIN}.conf" ]; then
+        ln -sf "/etc/nginx/sites-available/${DOMAIN}.conf" "/etc/nginx/sites-enabled/${DOMAIN}.conf"
+    fi
+    
+    log_success "nginx 설정 파일 배포 완료"
+}
+
+# SSL 인증서 확인 및 발급
+setup_ssl_certificate() {
+    log_step "SSL 인증서 확인 중..."
+    
+    if [ -d "/etc/letsencrypt/live/${DOMAIN}" ]; then
+        log_success "SSL 인증서가 이미 존재합니다."
+        
+        # 인증서 만료일 확인
+        EXPIRY_DATE=$(openssl x509 -enddate -noout -in "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" | cut -d= -f2)
+        EXPIRY_EPOCH=$(date -d "$EXPIRY_DATE" +%s)
+        CURRENT_EPOCH=$(date +%s)
+        DAYS_LEFT=$(( ($EXPIRY_EPOCH - $CURRENT_EPOCH) / 86400 ))
+        
+        log_info "인증서 만료까지 ${DAYS_LEFT}일 남았습니다."
+        
+        if [ $DAYS_LEFT -lt 30 ]; then
+            log_warning "인증서 갱신을 권장합니다."
+            read -p "지금 갱신하시겠습니까? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                certbot renew --nginx
+                log_success "인증서 갱신 완료"
+            fi
+        fi
+    else
+        log_warning "SSL 인증서가 없습니다. 발급을 시작합니다..."
+        
+        # 이메일 확인
+        if [ "$EMAIL" = "your-email@example.com" ]; then
+            log_error "스크립트 상단의 EMAIL 변수를 실제 이메일 주소로 변경해주세요."
+            exit 1
+        fi
+        
+        # 임시 HTTP 설정으로 nginx 설정 변경
+        log_info "임시 HTTP 설정으로 변경 중..."
+        
+        # HTTPS 블록 임시 주석 처리
+        sed -i.bak '/server {/,/listen 443/s/^/#/' "/etc/nginx/sites-available/${DOMAIN}.conf"
+        sed -i '/listen 443/,/^}/s/^/#/' "/etc/nginx/sites-available/${DOMAIN}.conf"
+        
+        # nginx 설정 테스트
+        if ! nginx -t; then
+            log_error "nginx 설정 테스트 실패"
+            mv "/etc/nginx/sites-available/${DOMAIN}.conf.bak" "/etc/nginx/sites-available/${DOMAIN}.conf"
+            exit 1
+        fi
+        
+        # nginx 재시작
+        systemctl restart nginx
+        log_info "임시 HTTP 서버 시작 완료"
+        
+        # certbot으로 인증서 발급
+        log_info "SSL 인증서 발급 중... (도메인: ${DOMAIN})"
+        
+        if certbot certonly --nginx -d "${DOMAIN}" --email "${EMAIL}" --agree-tos --no-eff-email; then
+            log_success "SSL 인증서 발급 완료"
+            
+            # 원래 설정으로 복원
+            mv "/etc/nginx/sites-available/${DOMAIN}.conf.bak" "/etc/nginx/sites-available/${DOMAIN}.conf"
+            
+            # nginx 설정 테스트
+            if ! nginx -t; then
+                log_error "nginx 설정 테스트 실패"
+                exit 1
+            fi
+            
+            log_success "HTTPS 설정 복원 완료"
+        else
+            log_error "SSL 인증서 발급 실패"
+            mv "/etc/nginx/sites-available/${DOMAIN}.conf.bak" "/etc/nginx/sites-available/${DOMAIN}.conf"
+            exit 1
+        fi
+    fi
+}
+
+# 자동 갱신 설정
+setup_auto_renewal() {
+    log_step "SSL 인증서 자동 갱신 설정 중..."
+    
+    # certbot timer 확인
+    if systemctl is-active --quiet certbot.timer; then
+        log_success "certbot 자동 갱신 타이머가 이미 활성화되어 있습니다."
+    else
+        log_info "certbot 자동 갱신 타이머를 활성화합니다..."
+        systemctl enable certbot.timer
+        systemctl start certbot.timer
+        log_success "자동 갱신 타이머 활성화 완료"
+    fi
+    
+    # renewal hook 설정
+    HOOK_DIR="/etc/letsencrypt/renewal-hooks/deploy"
+    mkdir -p "$HOOK_DIR"
+    
+    cat > "$HOOK_DIR/reload-nginx.sh" << 'EOF'
+#!/bin/bash
+systemctl reload nginx
+EOF
+    
+    chmod +x "$HOOK_DIR/reload-nginx.sh"
+    log_success "nginx reload hook 설정 완료"
+    
+    log_info "다음 갱신 시간: $(systemctl list-timers certbot.timer | grep certbot.timer | awk '{print $1, $2}')"
+}
+
+# nginx 시작 및 확인
+start_nginx() {
+    log_step "nginx 시작 중..."
+    
+    # nginx 설정 테스트
+    if ! nginx -t; then
+        log_error "nginx 설정 테스트 실패"
+        exit 1
+    fi
+    
+    # nginx 재시작
+    systemctl restart nginx
+    
+    # nginx 상태 확인
+    if systemctl is-active --quiet nginx; then
+        log_success "nginx가 정상적으로 실행 중입니다."
+    else
+        log_error "nginx 시작 실패"
+        systemctl status nginx
+        exit 1
+    fi
 }
 
 # 기존 백엔드 컨테이너 중지 및 삭제
@@ -158,7 +348,6 @@ clean_build_cache() {
 build_and_start_backend() {
     log_step "백엔드 빌드 및 시작 중..."
     log_info "백엔드 빌드 중... (2-3분 소요 가능)"
-    log_warning "프론트엔드는 영향받지 않습니다."
     
     docker compose build --no-cache backend
     docker compose up -d backend
@@ -170,20 +359,30 @@ build_and_start_backend() {
 health_check() {
     log_step "백엔드 서비스 헬스 체크 중..."
     
-    log_info "백엔드 서버 확인 중..."
+    # 로컬 백엔드 확인
+    log_info "로컬 백엔드 서버 확인 중..."
     for i in {1..12}; do
         if curl -f http://localhost:3050/health &> /dev/null; then
-            log_success "백엔드 서버가 정상적으로 실행 중입니다!"
+            log_success "로컬 백엔드 서버가 정상적으로 실행 중입니다!"
             break
         fi
         
         if [ $i -eq 12 ]; then
-            log_warning "백엔드 서버 헬스 체크 실패 (로그를 확인해주세요)"
+            log_warning "로컬 백엔드 서버 헬스 체크 실패"
         else
             log_info "백엔드 서버 시작 대기 중... ($i/12)"
             sleep 5
         fi
     done
+    
+    # HTTPS 접속 확인
+    log_info "HTTPS 접속 확인 중..."
+    sleep 2
+    if curl -f -k https://${DOMAIN}/health &> /dev/null; then
+        log_success "HTTPS 접속이 정상적으로 작동합니다!"
+    else
+        log_warning "HTTPS 접속 확인 실패 (nginx 로그를 확인하세요)"
+    fi
 }
 
 # 배포 정보 출력
@@ -196,14 +395,20 @@ print_deployment_info() {
     echo -e "${GREEN}╚═══════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BLUE}📍 접속 정보:${NC}"
-    echo -e "   - 백엔드 API: ${GREEN}https://grade-server.gbeai.net${NC}"
+    echo -e "   - 백엔드 API: ${GREEN}https://${DOMAIN}${NC}"
     echo -e "   - 로컬 백엔드: ${GREEN}http://localhost:3050${NC}"
     echo -e "   - 헬스 체크: ${GREEN}http://localhost:3050/health${NC}"
     echo ""
+    echo -e "${BLUE}🔒 SSL 인증서:${NC}"
+    echo -e "   - 자동 갱신: ${GREEN}활성화${NC}"
+    echo -e "   - 갱신 주기: ${GREEN}매일 2회 확인${NC}"
+    echo ""
     echo -e "${BLUE}🔧 유용한 명령어:${NC}"
     echo -e "   - 백엔드 로그: ${YELLOW}docker compose logs -f backend${NC}"
+    echo -e "   - nginx 로그: ${YELLOW}tail -f /var/log/nginx/backend-error.log${NC}"
     echo -e "   - 컨테이너 상태: ${YELLOW}docker ps${NC}"
-    echo -e "   - 컨테이너 재시작: ${YELLOW}docker compose restart backend${NC}"
+    echo -e "   - nginx 상태: ${YELLOW}systemctl status nginx${NC}"
+    echo -e "   - SSL 인증서 상태: ${YELLOW}certbot certificates${NC}"
     echo ""
 }
 
@@ -215,9 +420,15 @@ main() {
     echo ""
     
     check_root
+    check_and_install_nginx
+    check_and_install_certbot
     check_docker
     check_env_file
     create_directories
+    deploy_nginx_config
+    setup_ssl_certificate
+    setup_auto_renewal
+    start_nginx
     stop_and_remove_backend
     remove_backend_image
     clean_build_cache
