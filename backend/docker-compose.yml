@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    container_name: grade-backend
+    restart: unless-stopped
+    ports:
+      - "3050:3050"
+    environment:
+      - NODE_ENV=production
+      - PORT=3050
+      - CORS_ORIGIN=https://grade.gbeai.net
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - grade-network
+
+networks:
+  grade-network:
+    name: grade-network
+    external: true

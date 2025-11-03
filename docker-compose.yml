@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  frontend:
+    build: .
+    container_name: grade-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - grade-network
+
+networks:
+  grade-network:
+    name: grade-network
+    driver: bridge

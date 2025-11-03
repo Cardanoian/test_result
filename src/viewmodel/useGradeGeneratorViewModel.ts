@@ -1,13 +1,12 @@
 import { useState, useRef } from 'react';
-import { EvaluationItem } from '../model';
-import { generateExcelFile, readExcelFile } from '../service/excelService';
-import { callGeminiApi } from '../service/geminiService';
-import { logAppUsage } from '@/service/supabaseService';
-import getPrompt from '@/service/promptService';
+import { GradeEvaluationItem } from '../model';
+import { generateExcelFile, readExcelFile } from '../service/gradeExcelService';
+import { callApi } from '../service/apiService';
+import { getGradePrompt } from '@/service/promptService';
 
 export const useGradeGeneratorViewModel = () => {
   const [subject, setSubject] = useState<string>('');
-  const [evaluations, setEvaluations] = useState<EvaluationItem[]>([]);
+  const [evaluations, setEvaluations] = useState<GradeEvaluationItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [fileName, setFileName] = useState<string>('');
@@ -25,7 +24,7 @@ export const useGradeGeneratorViewModel = () => {
 
   const handleEvaluationChange = (
     index: number,
-    field: keyof EvaluationItem,
+    field: keyof GradeEvaluationItem,
     value: string
   ) => {
     const updatedEvaluations = evaluations.map((item, i) => {
@@ -52,7 +51,7 @@ export const useGradeGeneratorViewModel = () => {
       alert('모든 항목을 입력해주세요.');
       return;
     }
-    const newItem: EvaluationItem = {
+    const newItem: GradeEvaluationItem = {
       number: inputNumber,
       area: inputArea,
       standard: inputStandard,
@@ -121,7 +120,7 @@ export const useGradeGeneratorViewModel = () => {
     // Validation check
     for (let i = 0; i < evaluations.length; i++) {
       const item = evaluations[i];
-      const fieldsToCheck: (keyof EvaluationItem)[] = [
+      const fieldsToCheck: (keyof GradeEvaluationItem)[] = [
         'number',
         'area',
         'standard',
@@ -130,7 +129,7 @@ export const useGradeGeneratorViewModel = () => {
       ];
       for (const field of fieldsToCheck) {
         if (String(item[field]).trim() === '') {
-          const fieldNameMap: Record<keyof EvaluationItem, string> = {
+          const fieldNameMap: Record<keyof GradeEvaluationItem, string> = {
             number: '번호',
             area: '영역',
             standard: '성취기준',
@@ -163,11 +162,10 @@ export const useGradeGeneratorViewModel = () => {
     try {
       for (let i = 0; i < evaluations.length; i++) {
         const item = evaluations[i];
-        const prompt = getPrompt(subject, item, lengthInstruction);
-        const result = await callGeminiApi(prompt);
+        const prompt = getGradePrompt(subject, item, lengthInstruction);
+        const result = await callApi(prompt);
         updatedEvaluations[i] = { ...item, result };
         setEvaluations([...updatedEvaluations]);
-        await logAppUsage(prompt, result);
         setProgress(Math.round(((i + 1) / totalItems) * 100));
       }
       generateExcelFile(subject, updatedEvaluations);

@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
-import { ExcelData, EvaluationItem } from '../model';
+import { GradeExcelData, GradeEvaluationItem } from '../model';
 
-export const readExcelFile = (file: File): Promise<ExcelData> => {
+export const readExcelFile = (file: File): Promise<GradeExcelData> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -20,7 +20,7 @@ export const readExcelFile = (file: File): Promise<ExcelData> => {
 
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const evaluations: EvaluationItem[] = [];
+        const evaluations: GradeEvaluationItem[] = [];
 
         let currentRow = 1;
         let lastNum: string = '1';
@@ -61,7 +61,7 @@ export const readExcelFile = (file: File): Promise<ExcelData> => {
             continue;
           }
 
-          const item: EvaluationItem = {
+          const item: GradeEvaluationItem = {
             number: numberCell || lastNum,
             area:
               sheet[
@@ -106,7 +106,7 @@ export const readExcelFile = (file: File): Promise<ExcelData> => {
 
 export const generateExcelFile = (
   subject: string,
-  evaluations: EvaluationItem[]
+  evaluations: GradeEvaluationItem[]
 ): void => {
   // 새로운 워크북과 시트 생성
   const newWorkbook = XLSX.utils.book_new();

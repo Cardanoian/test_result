@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/view/ui/card';
 import { Button } from '@/view/ui/button';
 import { Input } from '@/view/ui/input';
@@ -11,19 +12,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/view/ui/table';
+import { Label } from '@/view/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/view/ui/radio-group';
+import {
+  Trash2,
+  Upload,
+  RotateCcw,
+  // HelpCircle,
+  Sparkles,
+  Download,
+  Home,
+} from 'lucide-react';
 import { Slider } from '@/view/ui/slider';
 import { Switch } from '@/view/ui/switch';
-import { Label } from '@/view/ui/label';
-import { Trash2, Upload, RotateCcw, HelpCircle, Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/view/ThemeToggle';
-import UserGuide from '@/view/UserGuide';
-import { useGradeGeneratorViewModel } from '@/viewmodel/useGradeGeneratorViewModel';
-import { EvaluationItem } from '@/model';
-import { cn } from '@/lib/utils';
-const GradeGenerator: React.FC = () => {
+import BehaviorUserGuide from '@/view/BehaviorUserGuide';
+import { useBehaviorGeneratorViewModel } from '@/viewmodel/useBehaviorGeneratorViewModel';
+import { BehaviorEvaluationItem, SchoolCategory } from '@/model';
+import { generateTemplateExcelFile } from '@/service/behaviorExcelService';
+
+const BehaviorGenerator: React.FC = () => {
+  const navigate = useNavigate();
   const {
-    subject,
-    setSubject,
     evaluations,
     isLoading,
     progress,
@@ -33,33 +43,22 @@ const GradeGenerator: React.FC = () => {
     fileInputRef,
     inputNumber,
     setInputNumber,
-    inputArea,
-    setInputArea,
-    inputStandard,
-    setInputStandard,
-    inputElement,
-    setInputElement,
-    inputLevel,
-    setInputLevel,
+    inputCharacteristics,
+    setInputCharacteristics,
+    inputActivity,
+    setInputActivity,
+    promptLength,
+    setPromptLength,
+    isRandomLength,
+    setIsRandomLength,
+    schoolCategory,
+    setSchoolCategory,
     handleAddEvaluation,
     handleDeleteEvaluation,
     handleReset,
     handleFileUpload,
     handleSubmit,
-    promptLength,
-    setPromptLength,
-    isRandomLength,
-    setIsRandomLength,
-    handleEvaluationChange,
-  } = useGradeGeneratorViewModel();
-
-  const fields: (keyof EvaluationItem)[] = [
-    'number',
-    'area',
-    'standard',
-    'element',
-    'level',
-  ];
+  } = useBehaviorGeneratorViewModel();
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4'>
@@ -67,14 +66,24 @@ const GradeGenerator: React.FC = () => {
         {/* 헤더 */}
         <div className='flex items-center justify-between'>
           <div>
-            <h1 className='text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
-              학기말 성적 생성기
+            <h1 className='text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'>
+              행발 생성기
             </h1>
-            <p className='text-muted-foreground mt-2'>
-              AI를 활용한 스마트 성적 관리 시스템
+            <p className='text-muted-foreground mt-2 text-sm md:text-base'>
+              AI를 활용한 행동특성 및 종합의견
             </p>
           </div>
-          <ThemeToggle />
+          <div className='flex items-center gap-2'>
+            <Button
+              variant='outline'
+              size='icon'
+              onClick={() => navigate('/')}
+              title='메인으로'
+            >
+              <Home className='h-4 w-4' />
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* 메인 입력 카드 */}
@@ -82,22 +91,35 @@ const GradeGenerator: React.FC = () => {
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
               <Upload className='h-5 w-5' />
-              성적 자료 입력
+              학생 특성 입력
             </CardTitle>
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <label className='text-sm font-medium'>과목명</label>
-                <Input
-                  type='text'
-                  value={subject}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setSubject(e.target.value)
-                  }
-                  placeholder='과목명을 입력하세요'
-                  disabled={isLoading}
-                />
+                <label className='text-sm font-medium'>학교급</label>
+                <div className='flex items-center gap-2'></div>
+                <RadioGroup
+                  className='flex flex-row gap-4'
+                  defaultValue='ele'
+                  onValueChange={(e: SchoolCategory) => {
+                    handleReset();
+                    setSchoolCategory(e);
+                  }}
+                >
+                  <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value='kinder' id='kinder-item' />
+                    <Label htmlFor='kinder-item'>유치원</Label>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value='ele' id='ele-item' />
+                    <Label htmlFor='ele-item'>초등학교</Label>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value='mid' id='mid-item' />
+                    <Label htmlFor='mid-item'>중,고등학교</Label>
+                  </div>
+                </RadioGroup>
               </div>
               <div className='space-y-2'>
                 <label className='text-sm font-medium'>엑셀 파일</label>
@@ -135,32 +157,42 @@ const GradeGenerator: React.FC = () => {
                   onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
                     handleSubmit(e)
                   }
-                  disabled={!subject || evaluations.length === 0 || isLoading}
-                  className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                  disabled={evaluations.length === 0 || isLoading}
+                  className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white min-w-30'
                 >
                   {isLoading ? <></> : <Sparkles />}
                   {isLoading ? `처리 중... ${progress}%` : '생성하기'}
                 </Button>
 
                 <Button
+                  onClick={() => generateTemplateExcelFile(schoolCategory)}
+                  variant='outline'
+                  disabled={isLoading}
+                  className='gap-2 min-w-30'
+                >
+                  <Download className='h-4 w-4' />
+                  서식파일
+                </Button>
+
+                <Button
                   onClick={handleReset}
                   variant='outline'
                   disabled={isLoading}
-                  className='gap-2'
+                  className='gap-2 min-w-30'
                 >
                   <RotateCcw className='h-4 w-4' />
                   초기화
                 </Button>
 
-                <Button
+                {/* <Button
                   onClick={() => setIsUserGuideOpen(true)}
                   variant='outline'
                   disabled={isLoading}
-                  className='gap-2'
+                  className='gap-2 min-w-30'
                 >
                   <HelpCircle className='h-4 w-4' />
                   사용방법
-                </Button>
+                </Button> */}
               </div>
 
               <div className='space-y-2 flex flex-wrap gap-3 items-center'>
@@ -215,7 +247,13 @@ const GradeGenerator: React.FC = () => {
             <CardTitle>데이터 개별 추가</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className='grid grid-cols-2 md:grid-cols-6 gap-3 items-end'>
+            <div
+              className={`grid grid-cols-1 ${
+                schoolCategory === 'kinder'
+                  ? 'md:grid-cols-4'
+                  : 'md:grid-cols-3'
+              } gap-3 items-end`}
+            >
               <div className='space-y-2'>
                 <label className='text-sm font-medium'>번호</label>
                 <Input
@@ -229,53 +267,31 @@ const GradeGenerator: React.FC = () => {
                 />
               </div>
               <div className='space-y-2'>
-                <label className='text-sm font-medium'>영역</label>
+                <label className='text-sm font-medium'>학생 특성</label>
                 <Input
                   type='text'
-                  value={inputArea}
+                  value={inputCharacteristics}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setInputArea(e.target.value)
+                    setInputCharacteristics(e.target.value)
                   }
-                  placeholder='영역'
+                  placeholder='만들기를 좋아하고 자연물로 그림 그리는 것을 즐김. 친구에게 선물하는 것을 좋아함.'
                   disabled={isLoading}
                 />
               </div>
-              <div className='space-y-2'>
-                <label className='text-sm font-medium'>성취기준</label>
-                <Input
-                  type='text'
-                  value={inputStandard}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setInputStandard(e.target.value)
-                  }
-                  placeholder='성취기준'
-                  disabled={isLoading}
-                />
-              </div>
-              <div className='space-y-2'>
-                <label className='text-sm font-medium'>평가요소</label>
-                <Input
-                  type='text'
-                  value={inputElement}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setInputElement(e.target.value)
-                  }
-                  placeholder='평가요소'
-                  disabled={isLoading}
-                />
-              </div>
-              <div className='space-y-2'>
-                <label className='text-sm font-medium'>단계</label>
-                <Input
-                  type='text'
-                  value={inputLevel}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setInputLevel(e.target.value)
-                  }
-                  placeholder='단계'
-                  disabled={isLoading}
-                />
-              </div>
+              {schoolCategory === 'kinder' && (
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>놀이 활동</label>
+                  <Input
+                    type='text'
+                    value={inputActivity}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setInputActivity(e.target.value)
+                    }
+                    placeholder='산책 시간에 돌멩이나 꽃잎을 주워서 미술 활동에 사용함.'
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
               <Button
                 onClick={handleAddEvaluation}
                 disabled={isLoading}
@@ -287,70 +303,67 @@ const GradeGenerator: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* 성적 데이터 테이블 */}
+        {/* 행동발달 및 종합의견 테이블 */}
         {evaluations.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>성적 데이터</CardTitle>
+              <CardTitle>행동발달 및 종합의견</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='rounded-md border'>
                 <Table className='w-full table-fixed'>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className='w-12 text-center'>삭제</TableHead>
-                      <TableHead className='w-12 text-center'>번호</TableHead>
-                      <TableHead className='w-24 text-center'>영역</TableHead>
-                      <TableHead className='w-[15%] text-center'>
-                        성취기준
+                      <TableHead className='w-16 text-center'>삭제</TableHead>
+                      <TableHead className='w-16 text-center'>번호</TableHead>
+                      <TableHead
+                        className={`text-center ${
+                          schoolCategory === 'kinder' ? 'w-[20%]' : 'w-[30%]'
+                        }`}
+                      >
+                        학생 특성
                       </TableHead>
-                      <TableHead className='w-[15%] text-center'>
-                        평가요소
-                      </TableHead>
-                      <TableHead className='w-12 text-center'>단계</TableHead>
+                      {schoolCategory === 'kinder' && (
+                        <TableHead className='w-[20%] text-center'>
+                          놀이 활동
+                        </TableHead>
+                      )}
                       <TableHead className='w-auto text-center'>
-                        평가결과
+                        행동발달 및 종합의견
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {evaluations.map((item: EvaluationItem, index: number) => (
-                      <TableRow key={index}>
-                        <TableCell className='text-center'>
-                          <Button
-                            variant='destructive'
-                            size='sm'
-                            onClick={() => handleDeleteEvaluation(index)}
-                            className='h-8 w-8 p-0'
-                          >
-                            <Trash2 className='h-4 w-4' />
-                          </Button>
-                        </TableCell>
-                        {fields.map((field) => (
-                          <TableCell key={field} className='p-1'>
-                            <Input
-                              type='text'
-                              value={item[field]}
-                              onChange={(e) =>
-                                handleEvaluationChange(
-                                  index,
-                                  field,
-                                  e.target.value
-                                )
-                              }
-                              className={cn(
-                                'w-full text-center',
-                                String(item[field]).trim() === '' &&
-                                  'border-red-500'
-                              )}
-                            />
+                    {evaluations.map(
+                      (item: BehaviorEvaluationItem, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className='text-center'>
+                            <Button
+                              variant='destructive'
+                              size='sm'
+                              onClick={() => handleDeleteEvaluation(index)}
+                              className='h-8 w-8 p-0'
+                            >
+                              <Trash2 className='h-4 w-4' />
+                            </Button>
                           </TableCell>
-                        ))}
-                        <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
-                          {item.result}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          <TableCell className='text-center'>
+                            {item.number}
+                          </TableCell>
+                          <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
+                            {item.characteristics}
+                          </TableCell>
+                          {schoolCategory === 'kinder' && (
+                            <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
+                              {item.activity}
+                            </TableCell>
+                          )}
+                          <TableCell className='p-2 align-middle whitespace-pre-wrap break-words text-center'>
+                            {item.result}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -360,15 +373,15 @@ const GradeGenerator: React.FC = () => {
 
         {/* 푸터 */}
         <div className='text-center text-muted-foreground text-sm py-8'>
-          <p>포항원동초등학교</p>
-          <p>교사 김지원 제작</p>
+          {/* <p>포항원동초등학교</p>
+          <p>교사 김지원 제작</p> */}
         </div>
       </div>
       {isUserGuideOpen && (
-        <UserGuide onClose={() => setIsUserGuideOpen(false)} />
+        <BehaviorUserGuide onClose={() => setIsUserGuideOpen(false)} />
       )}
     </div>
   );
 };
 
-export default GradeGenerator;
+export default BehaviorGenerator;

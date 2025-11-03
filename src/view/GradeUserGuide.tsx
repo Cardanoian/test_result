@@ -12,11 +12,11 @@ import {
   Moon,
 } from 'lucide-react';
 
-interface UserGuideProps {
+interface GradeUserGuideProps {
   onClose: () => void;
 }
 
-const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
+const GradeUserGuide: React.FC<GradeUserGuideProps> = ({ onClose }) => {
   return (
     <div className='fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4'>
       <Card className='w-full max-w-4xl h-[90vh] flex flex-col'>
@@ -393,4 +393,4 @@ const UserGuide: React.FC<UserGuideProps> = ({ onClose }) => {
   );
 };
 
-export default UserGuide;
+export default GradeUserGuide;

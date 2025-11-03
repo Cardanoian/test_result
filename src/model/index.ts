@@ -1,5 +1,5 @@
 export interface Message {
-  role: "system" | "user" | "assistant";
+  role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
@@ -29,7 +29,7 @@ export interface Choice {
   index: number;
 }
 
-export interface EvaluationItem {
+export interface GradeEvaluationItem {
   number: string;
   area: string;
   standard: string;
@@ -38,6 +38,19 @@ export interface EvaluationItem {
   result: string;
 }
 
-export interface ExcelData {
-  evaluations: EvaluationItem[];
+export interface GradeExcelData {
+  evaluations: GradeEvaluationItem[];
 }
+
+export interface BehaviorEvaluationItem {
+  number: string;
+  characteristics: string;
+  activity?: string;
+  result: string;
+}
+
+export interface BehaviorExcelData {
+  evaluations: BehaviorEvaluationItem[];
+}
+
+export type SchoolCategory = 'ele' | 'kinder' | 'mid';
