@@ -109,6 +109,58 @@ create_directories() {
     log_success "디렉토리 생성 완료"
 }
 
+# 포트 사용 중인 프로세스 확인 및 정리
+check_and_free_ports() {
+    log_step "포트 사용 확인 및 정리 중..."
+    
+    # 포트 80 확인
+    if ss -ltn | grep -q ':80 '; then
+        log_warning "포트 80이 사용 중입니다."
+        
+        # 포트 80을 사용하는 모든 Docker 컨테이너 중지
+        local containers=$(docker ps --format "{{.ID}} {{.Ports}}" | grep '0.0.0.0:80' | awk '{print $1}')
+        if [ -n "$containers" ]; then
+            log_info "포트 80을 사용하는 Docker 컨테이너를 중지합니다..."
+            echo "$containers" | xargs -r docker stop
+            echo "$containers" | xargs -r docker rm
+            log_success "포트 80 사용 컨테이너 정리 완료"
+            sleep 2
+        fi
+    fi
+    
+    # 포트 443 확인
+    if ss -ltn | grep -q ':443 '; then
+        log_warning "포트 443이 사용 중입니다."
+        
+        # 포트 443을 사용하는 모든 Docker 컨테이너 중지
+        local containers=$(docker ps --format "{{.ID}} {{.Ports}}" | grep '0.0.0.0:443' | awk '{print $1}')
+        if [ -n "$containers" ]; then
+            log_info "포트 443을 사용하는 Docker 컨테이너를 중지합니다..."
+            echo "$containers" | xargs -r docker stop
+            echo "$containers" | xargs -r docker rm
+            log_success "포트 443 사용 컨테이너 정리 완료"
+            sleep 2
+        fi
+    fi
+    
+    # 포트 3050 확인
+    if ss -ltn | grep -q ':3050 '; then
+        log_warning "포트 3050이 사용 중입니다."
+        
+        # 포트 3050을 사용하는 모든 Docker 컨테이너 중지
+        local containers=$(docker ps --format "{{.ID}} {{.Ports}}" | grep '0.0.0.0:3050' | awk '{print $1}')
+        if [ -n "$containers" ]; then
+            log_info "포트 3050을 사용하는 Docker 컨테이너를 중지합니다..."
+            echo "$containers" | xargs -r docker stop
+            echo "$containers" | xargs -r docker rm
+            log_success "포트 3050 사용 컨테이너 정리 완료"
+            sleep 2
+        fi
+    fi
+    
+    log_success "포트 정리 완료"
+}
+
 # 기존 컨테이너 중지 및 삭제
 stop_and_remove_containers() {
     log_step "기존 컨테이너 확인 및 정리 중..."
@@ -130,13 +182,13 @@ stop_and_remove_containers() {
     fi
     
     # docker-compose로 실행된 컨테이너들 정리
-    if docker compose ps | grep -q "Up\|Exit"; then
+    if docker compose ps 2>/dev/null | grep -q "Up\|Exit"; then
         log_warning "Docker Compose 컨테이너들을 중지합니다..."
         docker compose down 2>/dev/null || true
     fi
     
     cd backend
-    if docker compose ps | grep -q "Up\|Exit"; then
+    if docker compose ps 2>/dev/null | grep -q "Up\|Exit"; then
         log_warning "백엔드 Docker Compose 컨테이너들을 중지합니다..."
         docker compose down 2>/dev/null || true
     fi
@@ -277,6 +329,7 @@ main() {
     check_docker
     check_backend_env
     create_directories
+    check_and_free_ports
     stop_and_remove_containers
     remove_images
     clean_build_cache
